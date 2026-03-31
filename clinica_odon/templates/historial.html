@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+
+/* ===== HEADER ===== */
+.titulo-cliente{
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* ===== TABS ===== */
+.nav-pills .nav-link {
+    border-radius: 10px;
+    margin-right: 5px;
+}
+.nav-pills .nav-link.active {
+    background: #2563eb;
+}
+
+/* ===== TIMELINE ===== */
+.timeline {
+    border-left: 3px solid #2563eb;
+    margin-left: 20px;
+    padding-left: 20px;
+}
+.timeline-item {
+    margin-bottom: 20px;
+    position: relative;
+}
+.timeline-item::before{
+    content: '';
+    position: absolute;
+    left: -28px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    background: #2563eb;
+    border-radius: 50%;
+}
+.timeline-content {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.08);
+}
+
+/* ===== ODONTOGRAMA ===== */
+.fila-dientes{
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.diente{
+    width: 45px;
+    height: 55px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.diente:hover{
+    transform: scale(1.1);
+}
+
+/* ESTADOS */
+.diente.ok { background:#22c55e; color:white; }
+.diente.caries { background:#ef4444; color:white; }
+.diente.endodoncia { background:#f59e0b; color:white; }
+.diente.extraido { background:#334155; color:white; }
+
+/* ===== CARD ===== */
+.card {
+    border-radius: 12px;
+}
+
+</style>
+
+<h3 class="mb-3 titulo-cliente">👤 {{ cliente.nombre }}</h3>
+
+<!-- ===== TABS ===== -->
+<ul class="nav nav-pills mb-4">
+
+<li class="nav-item">
+<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#historial">Historial</button>
+</li>
+
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#anamnesis">Anamnesis</button>
+</li>
+
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#odontograma">Odontograma</button>
+</li>
+
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#pagos">Pagos</button>
+</li>
+
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#docs">Documentos</button>
+</li>
+
+</ul>
+
+<div class="tab-content">
+
+<!-- ================= HISTORIAL ================= -->
+<div class="tab-pane fade show active" id="historial">
+
+<div class="timeline">
+
+{% for e in eventos %}
+<div class="timeline-item">
+<div class="timeline-content">
+<h6 class="fw-bold">{{ e.titulo }}</h6>
+<p>{{ e.descripcion }}</p>
+<small class="text-muted">{{ e.fecha }}</small>
+</div>
+</div>
+{% endfor %}
+
+</div>
+
+</div>
+
+<!-- ================= ANAMNESIS ================= -->
+<div class="tab-pane fade" id="anamnesis">
+
+<div class="card p-4">
+
+<h5 class="mb-3">Historia Clínica</h5>
+
+<textarea id="enfermedades" class="form-control mb-2">{{ anamnesis.enfermedades if anamnesis else "" }}</textarea>
+<textarea id="alergias" class="form-control mb-2">{{ anamnesis.alergias if anamnesis else "" }}</textarea>
+<textarea id="medicamentos" class="form-control mb-2">{{ anamnesis.medicamentos if anamnesis else "" }}</textarea>
+<textarea id="observaciones" class="form-control mb-2">{{ anamnesis.observaciones if anamnesis else "" }}</textarea>
+
+<button class="btn btn-success w-100" onclick="guardarClinico()">Guardar</button>
+
+</div>
+
+</div>
+
+<!-- ================= ODONTOGRAMA ================= -->
+<div class="tab-pane fade" id="odontograma">
+
+<div class="card p-4 text-center">
+
+<h5 class="mb-4">🦷 Odontograma Clínico</h5>
+
+<!-- SUPERIOR -->
+<div class="fila-dientes">
+{% for d in [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28] %}
+<div class="diente" data-id="{{ d }}" onclick="seleccionarDiente(this)">
+{{ d }}
+</div>
+{% endfor %}
+</div>
+
+<hr>
+
+<!-- INFERIOR -->
+<div class="fila-dientes">
+{% for d in [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38] %}
+<div class="diente" data-id="{{ d }}" onclick="seleccionarDiente(this)">
+{{ d }}
+</div>
+{% endfor %}
+</div>
+
+<!-- LEYENDA -->
+<div class="mt-3">
+<span class="badge bg-success">OK</span>
+<span class="badge bg-danger">Caries</span>
+<span class="badge bg-warning text-dark">Endodoncia</span>
+<span class="badge bg-secondary">Extraído</span>
+</div>
+
+<button class="btn btn-success mt-3 w-100" onclick="guardarOdontograma()">Guardar</button>
+<button class="btn btn-outline-danger mt-2 w-100" onclick="limpiarOdontograma()">Limpiar</button>
+
+</div>
+
+</div>
+
+<!-- ================= PAGOS ================= -->
+<div class="tab-pane fade" id="pagos">
+
+<div class="card p-3">
+
+{% if cuotas|length == 0 %}
+<p class="text-center text-muted">No hay pagos registrados</p>
+{% else %}
+
+<table class="table table-hover">
+<tr>
+<th>Cuota</th>
+<th>Monto</th>
+<th>Fecha</th>
+<th>Estado</th>
+</tr>
+
+{% for c in cuotas %}
+<tr>
+<td>{{ c.numero }}</td>
+<td>{{ c.monto | gs }}</td>
+<td>{{ c.fecha_vencimiento }}</td>
+<td>
+{% if c.estado == "PAGADO" %}
+<span class="badge bg-success">Pagado</span>
+{% elif c.estado == "VENCIDO" %}
+<span class="badge bg-danger">Vencido</span>
+{% else %}
+<span class="badge bg-warning text-dark">Pendiente</span>
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+
+</table>
+
+{% endif %}
+
+</div>
+
+</div>
+
+<!-- ================= DOCUMENTOS ================= -->
+<div class="tab-pane fade" id="docs">
+
+<div class="card p-4 text-center">
+<p class="text-muted">📎 Próximamente: archivos clínicos</p>
+</div>
+
+</div>
+
+</div>
+
+<!-- ================= JS ================= -->
+
+<script>
+
+// ===== ANAMNESIS =====
+function guardarClinico(){
+
+    fetch("/guardar_clinico/{{ cliente.id }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            enfermedades: document.getElementById("enfermedades").value,
+            alergias: document.getElementById("alergias").value,
+            medicamentos: document.getElementById("medicamentos").value,
+            observaciones: document.getElementById("observaciones").value
+        })
+    })
+    .then(()=> location.reload())
+}
+
+// ===== ODONTOGRAMA =====
+let dientes = {{ dientes | tojson }}
+
+// default OK
+if(Object.keys(dientes).length === 0){
+    document.querySelectorAll(".diente").forEach(el=>{
+        dientes[el.dataset.id] = "ok"
+    })
+}
+
+// pintar estados
+document.querySelectorAll(".diente").forEach(el=>{
+    let id = el.dataset.id
+    if(dientes[id]){
+        el.classList.add(dientes[id])
+    }
+})
+
+// ciclo estados
+function seleccionarDiente(el){
+
+    let id = el.dataset.id
+    let estados = ["ok","caries","endodoncia","extraido","none"]
+
+    let actual = dientes[id] || "ok"
+    let next = estados[(estados.indexOf(actual)+1) % estados.length]
+
+    el.className = "diente"
+
+    if(next !== "none"){
+        el.classList.add(next)
+        dientes[id] = next
+    } else {
+        delete dientes[id]
+    }
+}
+
+// limpiar
+function limpiarOdontograma(){
+    dientes = {}
+    document.querySelectorAll(".diente").forEach(el=>{
+        el.className = "diente"
+    })
+}
+
+// guardar
+function guardarOdontograma(){
+
+    fetch("/guardar_odontograma/{{ cliente.id }}", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(dientes)
+    })
+    .then(()=> location.reload())
+}
+
+</script>
+
+{% endblock %}

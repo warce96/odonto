@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-3">🦷 Nueva Ficha Clínica</h2>
+
+<div class="card p-4">
+
+<form method="POST">
+
+<div class="row">
+
+<!-- ================= IZQUIERDA ================= -->
+<div class="col-md-6">
+
+<h5>👤 Paciente</h5>
+
+<select name="cliente_id" class="form-control mb-2">
+    {% for c in clientes %}
+    <option value="{{ c.id }}">{{ c.nombre }}</option>
+    {% endfor %}
+</select>
+
+<input placeholder="Edad" class="form-control mb-2">
+<input placeholder="Ocupación" class="form-control mb-2">
+
+<h6>🧠 Perfil Clínico</h6>
+
+<select class="form-control mb-2">
+    <option>Receptivo</option>
+    <option>Escéptico</option>
+    <option>Problemático</option>
+</select>
+
+<select class="form-control mb-2">
+    <option>Caries: SI</option>
+    <option>Caries: NO</option>
+</select>
+
+<select class="form-control mb-2">
+    <option>Periodontal: SI</option>
+    <option>Periodontal: NO</option>
+</select>
+
+<select class="form-control mb-2">
+    <option>Fumador: SI</option>
+    <option>Fumador: NO</option>
+</select>
+
+</div>
+
+<!-- ================= DERECHA ================= -->
+<div class="col-md-6">
+
+<h5>💰 Tratamiento</h5>
+
+<label>
+Monto Total 
+<small class="text-muted">(Es lo que se le cobra al paciente)</small>
+</label>
+<input name="total" id="total" placeholder="Ej: 1.000.000" class="form-control" onkeyup="formatearNumero(this)">
+
+<label>
+Costo 
+<small class="text-muted">(Gastos para realizar el tratamiento)</small>
+</label>
+<input name="costo" placeholder="Ej: 500.000" class="form-control" onkeyup="formatearNumero(this)">
+
+<label>IVA (%)</label>
+<input name="iva" id="iva" value="0" class="form-control mb-2">
+
+<textarea placeholder="Descripción del tratamiento" class="form-control mb-2"></textarea>
+
+<h6>💳 Pago</h6>
+
+<label>Tipo de pago</label>
+<select name="tipo" id="tipo" class="form-control mb-2">
+    <option value="contado">Contado</option>
+    <option value="cuotas">Cuotas</option>
+</select>
+
+<!-- CONTADO -->
+<div id="contado_box">
+    <label>Fecha de pago</label>
+    <input type="date" name="fecha_pago" class="form-control mb-2">
+</div>
+
+<!-- CUOTAS -->
+<div id="cuotas_box" style="display:none;">
+
+<label>Interés (%)</label>
+<input name="interes" id="interes" value="0" class="form-control mb-2">
+
+<label>Cantidad de cuotas</label>
+<input name="cuotas" id="cuotas" value="1" class="form-control mb-2">
+
+<label>Fecha inicio de cobro</label>
+<input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control mb-2">
+
+<label>Periodicidad</label>
+<select name="periodo" id="periodo" class="form-control mb-2">
+    <option value="30">Mensual</option>
+    <option value="15">Quincenal</option>
+    <option value="180">Semestral</option>
+</select>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ================= SIMULACIÓN ================= -->
+<h6 class="mt-4">📊 Simulación de Pagos</h6>
+<div id="simulacion"></div>
+
+<button class="btn btn-success w-100 mt-3">Guardar Ficha</button>
+
+</form>
+
+</div>
+
+<script>
+
+// ================= FORMATO MONEDA =================
+function formato(num){
+    return new Intl.NumberFormat('es-PY').format(num)
+}
+
+// ================= TOGGLE TIPO =================
+document.getElementById("tipo").addEventListener("change", function(){
+
+    if(this.value === "cuotas"){
+        document.getElementById("cuotas_box").style.display = "block"
+        document.getElementById("contado_box").style.display = "none"
+    }else{
+        document.getElementById("cuotas_box").style.display = "none"
+        document.getElementById("contado_box").style.display = "block"
+    }
+
+})
+
+// ================= FORMATEO INPUT =================
+document.getElementById("total").addEventListener("input", function(){
+    let valor = this.value.replace(/\./g,'').replace(/[^0-9]/g,'')
+    this.value = formato(valor)
+})
+
+// ================= SIMULACIÓN =================
+document.addEventListener("input", function(){
+
+    let total = parseFloat(document.getElementById("total").value.replace(/\./g,'')) || 0
+    let interes = parseFloat(document.getElementById("interes")?.value) || 0
+    let cuotas = parseInt(document.getElementById("cuotas")?.value) || 1
+    let periodo = parseInt(document.getElementById("periodo")?.value) || 30
+
+    let fechaInicio = document.getElementById("fecha_inicio")?.value
+    let fechaBase = fechaInicio ? new Date(fechaInicio) : new Date()
+
+    let totalFinal = total * (1 + interes/100)
+    let monto = totalFinal / cuotas
+
+    let html = ""
+
+    for(let i=1;i<=cuotas;i++){
+
+        let fecha = new Date(fechaBase)
+        fecha.setDate(fecha.getDate() + (periodo*i))
+
+        html += `
+        <div class="card p-2 mb-2">
+            💳 Cuota ${i}: <b>${formato(monto)}</b><br>
+            📅 ${fecha.toLocaleDateString()}
+        </div>`
+    }
+
+    document.getElementById("simulacion").innerHTML = html
+
+})
+
+</script>
+
+{% endblock %}

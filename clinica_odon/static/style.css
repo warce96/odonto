@@ -1,0 +1,32 @@
+/* NOTIFICACIONES */
+#notificaciones {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 300px;
+    z-index: 9999;
+}
+
+.noti {
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    color: white;
+    animation: slideIn 0.5s ease;
+    box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+}
+
+.noti-danger { background: #dc3545; }
+.noti-warning { background: #ffc107; color:black; }
+.noti-ok { background: #198754; }
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

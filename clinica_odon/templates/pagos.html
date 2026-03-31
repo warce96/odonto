@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>💳 Gestión de Cobros</h2>
+
+<div class="card p-3">
+
+<table class="table table-hover">
+
+<tr>
+<th>#</th>
+<th>Monto</th>
+<th>Vencimiento</th>
+<th>Estado</th>
+<th>Acción</th>
+</tr>
+
+{% for c in cuotas %}
+
+<tr class="
+{% if c.estado == 'VENCIDO' %}table-danger
+{% elif c.estado == 'PENDIENTE' %}table-warning
+{% else %}table-success{% endif %}
+">
+
+<td>{{ c.numero }}</td>
+<td>{{ "{:,.0f}".format(c.monto) }}</td>
+<td>{{ c.fecha_vencimiento }}</td>
+
+<td>
+{% if c.estado == "PAGADO" %}
+<span class="badge bg-success">Pagado</span>
+{% elif c.estado == "VENCIDO" %}
+<span class="badge bg-danger">Vencido</span>
+{% else %}
+<span class="badge bg-warning text-dark">Pendiente</span>
+{% endif %}
+</td>
+
+<td>
+{% if c.estado != "PAGADO" %}
+<a href="/pagar/{{ c.id }}" class="btn btn-sm btn-success">
+Cobrar
+</a>
+{% endif %}
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

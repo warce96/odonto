@@ -1,7 +1,7 @@
 from app import app
 from flask import render_template
 from flask_login import login_required
-from models import Cliente, Ficha, Cuota, Anamnesis, Odontograma, EventoClinico
+from models import Cliente, Ficha, Cuota, Anamnesis, Odontograma, EventoClinico, Pago
 from datetime import datetime
 import json
 
@@ -14,22 +14,35 @@ def gs(valor):
 @login_required
 def historial(cliente_id):
 
-    cliente = Cliente.query.get(cliente_id)
+    cliente = Cliente.query.get_or_404(cliente_id)
 
+    # ✅ SOLO fichas del cliente
     fichas = Ficha.query.filter_by(cliente_id=cliente_id).all()
-    cuotas = Cuota.query.all()
+
+    # ✅ 🔥 FIX IMPORTANTE → SOLO cuotas del cliente
+    cuotas = (
+        Cuota.query
+        .join(Cuota.pago)
+        .join(Pago.ficha)
+        .filter(Ficha.cliente_id == cliente_id)
+        .all()
+    )
 
     anamnesis = Anamnesis.query.filter_by(cliente_id=cliente_id).first()
     odontograma = Odontograma.query.filter_by(cliente_id=cliente_id).first()
 
-    dientes = []
+    # ✅ 🔥 CAMBIO → ahora es dict (para odontograma pro)
+    dientes = {}
     if odontograma and odontograma.dientes:
-        dientes = json.loads(odontograma.dientes)
+        try:
+            dientes = json.loads(odontograma.dientes)
+        except:
+            dientes = {}
 
     eventos = []
-    hoy = datetime.today().date()
+    hoy = datetime.now()
 
-    # ===== TRATAMIENTOS =====
+    # ================= TRATAMIENTOS =================
     for f in fichas:
         eventos.append({
             "titulo": "Tratamiento realizado",
@@ -37,22 +50,29 @@ def historial(cliente_id):
             "fecha": f.fecha
         })
 
-    # ===== CUOTAS =====
+    # ================= CUOTAS =================
     for c in cuotas:
 
         if c.estado == "PAGADO":
             titulo = "Pago recibido"
         else:
-            dias = (c.fecha_vencimiento - hoy).days
+            dias = (c.fecha_vencimiento - hoy.date()).days
             titulo = "Pago vencido" if dias < 0 else "Pago pendiente"
+
+        # 🔥 FIX FECHA (sin desfase futuro)
+        fecha_ok = datetime(
+            c.fecha_vencimiento.year,
+            c.fecha_vencimiento.month,
+            c.fecha_vencimiento.day
+        )
 
         eventos.append({
             "titulo": titulo,
             "descripcion": f"Cuota {c.numero} - {gs(c.monto)}",
-            "fecha": datetime.combine(c.fecha_vencimiento, datetime.min.time())
+            "fecha": fecha_ok
         })
 
-    # 🔥 NUEVO: EVENTOS CLÍNICOS
+    # ================= EVENTOS CLÍNICOS =================
     eventos_expandibles = []
 
     eventos_db = EventoClinico.query.filter_by(cliente_id=cliente_id).all()
@@ -69,8 +89,9 @@ def historial(cliente_id):
             "detalle": detalle
         })
 
-    eventos.sort(key=lambda x: x["fecha"], reverse=True)
-    eventos_expandibles.sort(key=lambda x: x["fecha"], reverse=True)
+    # ================= ORDEN CORRECTO =================
+    eventos = sorted(eventos, key=lambda x: x["fecha"], reverse=True)
+    eventos_expandibles = sorted(eventos_expandibles, key=lambda x: x["fecha"], reverse=True)
 
     return render_template(
         "historial.html",
@@ -81,8 +102,3 @@ def historial(cliente_id):
         anamnesis=anamnesis,
         dientes=dientes
     )
-
-
-
-
-    

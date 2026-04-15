@@ -43,6 +43,11 @@
     padding: 15px;
     border-radius: 12px;
     box-shadow: 0px 4px 15px rgba(0,0,0,0.08);
+    transition: 0.2s;
+}
+.timeline-content:hover{
+    transform: translateY(-2px);
+    box-shadow: 0px 6px 20px rgba(0,0,0,0.12);
 }
 
 /* ===== ODONTOGRAMA ===== */
@@ -85,7 +90,6 @@
 
 <h3 class="mb-3 titulo-cliente">👤 {{ cliente.nombre }}</h3>
 
-<!-- ===== TABS ===== -->
 <ul class="nav nav-pills mb-4">
 
 <li class="nav-item">
@@ -115,14 +119,40 @@
 <!-- ================= HISTORIAL ================= -->
 <div class="tab-pane fade show active" id="historial">
 
+<!-- FILTRO -->
+<div class="card p-3 mb-3">
+<div class="row g-2">
+<div class="col-md-4">
+<label>Desde</label>
+<input type="date" id="fechaDesde" class="form-control">
+</div>
+
+<div class="col-md-4">
+<label>Hasta</label>
+<input type="date" id="fechaHasta" class="form-control">
+</div>
+
+<div class="col-md-4 d-flex align-items-end">
+<button class="btn btn-primary w-100" onclick="filtrarFechas()">Filtrar</button>
+</div>
+</div>
+</div>
+
 <div class="timeline">
 
 {% for e in eventos %}
-<div class="timeline-item">
+<div class="timeline-item" data-fecha="{{ e.fecha.strftime('%Y-%m-%d') if e.fecha else '' }}">
 <div class="timeline-content">
-<h6 class="fw-bold">{{ e.titulo }}</h6>
-<p>{{ e.descripcion }}</p>
-<small class="text-muted">{{ e.fecha }}</small>
+
+<div class="d-flex justify-content-between">
+<h6 class="fw-bold mb-0">{{ e.titulo }}</h6>
+<small class="text-muted">
+{{ e.fecha.strftime('%d/%m/%Y') if e.fecha else '' }}
+</small>
+</div>
+
+<p class="mb-1">{{ e.descripcion }}</p>
+
 </div>
 </div>
 {% endfor %}
@@ -138,10 +168,10 @@
 
 <h5 class="mb-3">Historia Clínica</h5>
 
-<textarea id="enfermedades" class="form-control mb-2">{{ anamnesis.enfermedades if anamnesis else "" }}</textarea>
-<textarea id="alergias" class="form-control mb-2">{{ anamnesis.alergias if anamnesis else "" }}</textarea>
-<textarea id="medicamentos" class="form-control mb-2">{{ anamnesis.medicamentos if anamnesis else "" }}</textarea>
-<textarea id="observaciones" class="form-control mb-2">{{ anamnesis.observaciones if anamnesis else "" }}</textarea>
+<textarea placeholder="Enfermedades..." id="enfermedades" class="form-control mb-2">{{ anamnesis.enfermedades if anamnesis else "" }}</textarea>
+<textarea placeholder="Alergias..." id="alergias" class="form-control mb-2">{{ anamnesis.alergias if anamnesis else "" }}</textarea>
+<textarea placeholder="Medicamentos..." id="medicamentos" class="form-control mb-2">{{ anamnesis.medicamentos if anamnesis else "" }}</textarea>
+<textarea placeholder="Observaciones..." id="observaciones" class="form-control mb-2">{{ anamnesis.observaciones if anamnesis else "" }}</textarea>
 
 <button class="btn btn-success w-100" onclick="guardarClinico()">Guardar</button>
 
@@ -156,7 +186,6 @@
 
 <h5 class="mb-4">🦷 Odontograma Clínico</h5>
 
-<!-- SUPERIOR -->
 <div class="fila-dientes">
 {% for d in [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28] %}
 <div class="diente" data-id="{{ d }}" onclick="seleccionarDiente(this)">
@@ -167,7 +196,6 @@
 
 <hr>
 
-<!-- INFERIOR -->
 <div class="fila-dientes">
 {% for d in [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38] %}
 <div class="diente" data-id="{{ d }}" onclick="seleccionarDiente(this)">
@@ -176,7 +204,6 @@
 {% endfor %}
 </div>
 
-<!-- LEYENDA -->
 <div class="mt-3">
 <span class="badge bg-success">OK</span>
 <span class="badge bg-danger">Caries</span>
@@ -191,66 +218,37 @@
 
 </div>
 
-<!-- ================= PAGOS ================= -->
-<div class="tab-pane fade" id="pagos">
-
-<div class="card p-3">
-
-{% if cuotas|length == 0 %}
-<p class="text-center text-muted">No hay pagos registrados</p>
-{% else %}
-
-<table class="table table-hover">
-<tr>
-<th>Cuota</th>
-<th>Monto</th>
-<th>Fecha</th>
-<th>Estado</th>
-</tr>
-
-{% for c in cuotas %}
-<tr>
-<td>{{ c.numero }}</td>
-<td>{{ c.monto | gs }}</td>
-<td>{{ c.fecha_vencimiento }}</td>
-<td>
-{% if c.estado == "PAGADO" %}
-<span class="badge bg-success">Pagado</span>
-{% elif c.estado == "VENCIDO" %}
-<span class="badge bg-danger">Vencido</span>
-{% else %}
-<span class="badge bg-warning text-dark">Pendiente</span>
-{% endif %}
-</td>
-</tr>
-{% endfor %}
-
-</table>
-
-{% endif %}
-
 </div>
-
-</div>
-
-<!-- ================= DOCUMENTOS ================= -->
-<div class="tab-pane fade" id="docs">
-
-<div class="card p-4 text-center">
-<p class="text-muted">📎 Próximamente: archivos clínicos</p>
-</div>
-
-</div>
-
-</div>
-
-<!-- ================= JS ================= -->
 
 <script>
 
+// ===== FILTRO =====
+function filtrarFechas(){
+    let desde = document.getElementById("fechaDesde").value
+    let hasta = document.getElementById("fechaHasta").value
+
+    document.querySelectorAll(".timeline-item").forEach(item => {
+        let fecha = item.dataset.fecha
+
+        if((!desde || fecha >= desde) && (!hasta || fecha <= hasta)){
+            item.style.display = "block"
+        } else {
+            item.style.display = "none"
+        }
+    })
+}
+
+// ===== ORDENAR =====
+document.addEventListener("DOMContentLoaded", function(){
+    let container = document.querySelector(".timeline")
+    let items = Array.from(document.querySelectorAll(".timeline-item"))
+
+    items.sort((a, b) => b.dataset.fecha.localeCompare(a.dataset.fecha))
+    items.forEach(el => container.appendChild(el))
+})
+
 // ===== ANAMNESIS =====
 function guardarClinico(){
-
     fetch("/guardar_clinico/{{ cliente.id }}", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -261,63 +259,45 @@ function guardarClinico(){
             observaciones: document.getElementById("observaciones").value
         })
     })
-    .then(()=> location.reload())
+    .then(res => alert(res.ok ? "Guardado" : "Error"))
 }
 
 // ===== ODONTOGRAMA =====
-let dientes = {{ dientes | tojson }}
+let dientes = {{ dientes | tojson | safe }} || {}
 
-// default OK
-if(Object.keys(dientes).length === 0){
-    document.querySelectorAll(".diente").forEach(el=>{
-        dientes[el.dataset.id] = "ok"
-    })
-}
-
-// pintar estados
 document.querySelectorAll(".diente").forEach(el=>{
     let id = el.dataset.id
-    if(dientes[id]){
-        el.classList.add(dientes[id])
-    }
+    if(!dientes[id]) dientes[id] = "ok"
+    el.classList.add(dientes[id])
 })
 
-// ciclo estados
 function seleccionarDiente(el){
-
     let id = el.dataset.id
-    let estados = ["ok","caries","endodoncia","extraido","none"]
+    let estados = ["ok","caries","endodoncia","extraido"]
 
     let actual = dientes[id] || "ok"
     let next = estados[(estados.indexOf(actual)+1) % estados.length]
 
-    el.className = "diente"
+    el.classList.remove("ok","caries","endodoncia","extraido")
+    el.classList.add(next)
 
-    if(next !== "none"){
-        el.classList.add(next)
-        dientes[id] = next
-    } else {
-        delete dientes[id]
-    }
+    dientes[id] = next
 }
 
-// limpiar
 function limpiarOdontograma(){
     dientes = {}
     document.querySelectorAll(".diente").forEach(el=>{
-        el.className = "diente"
+        el.classList.remove("ok","caries","endodoncia","extraido")
     })
 }
 
-// guardar
 function guardarOdontograma(){
-
     fetch("/guardar_odontograma/{{ cliente.id }}", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify(dientes)
     })
-    .then(()=> location.reload())
+    .then(res => alert(res.ok ? "Guardado" : "Error"))
 }
 
 </script>

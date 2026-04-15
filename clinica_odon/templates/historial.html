@@ -122,18 +122,14 @@
 <!-- FILTRO -->
 <div class="card p-3 mb-3">
 <div class="row g-2">
-<div class="col-md-4">
+<div class="col-md-6">
 <label>Desde</label>
-<input type="date" id="fechaDesde" class="form-control">
+<input type="date" id="fechaDesde" class="form-control" oninput="filtrarFechas()">
 </div>
 
-<div class="col-md-4">
+<div class="col-md-6">
 <label>Hasta</label>
-<input type="date" id="fechaHasta" class="form-control">
-</div>
-
-<div class="col-md-4 d-flex align-items-end">
-<button class="btn btn-primary w-100" onclick="filtrarFechas()">Filtrar</button>
+<input type="date" id="fechaHasta" class="form-control" oninput="filtrarFechas()">
 </div>
 </div>
 </div>
@@ -141,14 +137,12 @@
 <div class="timeline">
 
 {% for e in eventos %}
-<div class="timeline-item" data-fecha="{{ e.fecha.strftime('%Y-%m-%d') if e.fecha else '' }}">
+<div class="timeline-item" data-fecha="{{ e.fecha }}">
 <div class="timeline-content">
 
 <div class="d-flex justify-content-between">
 <h6 class="fw-bold mb-0">{{ e.titulo }}</h6>
-<small class="text-muted">
-{{ e.fecha.strftime('%d/%m/%Y') if e.fecha else '' }}
-</small>
+<small class="text-muted">{{ e.fecha }}</small>
 </div>
 
 <p class="mb-1">{{ e.descripcion }}</p>
@@ -218,33 +212,96 @@
 
 </div>
 
+<!-- ================= PAGOS ================= -->
+<div class="tab-pane fade" id="pagos">
+
+<div class="card p-3">
+
+{% if cuotas|length == 0 %}
+<p class="text-center text-muted">No hay pagos registrados</p>
+{% else %}
+
+<table class="table table-hover">
+<tr>
+<th>Cuota</th>
+<th>Monto</th>
+<th>Fecha</th>
+<th>Estado</th>
+</tr>
+
+{% for c in cuotas %}
+<tr>
+<td>{{ c.numero }}</td>
+<td>{{ c.monto | gs }}</td>
+<td>{{ c.fecha_vencimiento }}</td>
+<td>
+{% if c.estado == "PAGADO" %}
+<span class="badge bg-success">Pagado</span>
+{% elif c.estado == "VENCIDO" %}
+<span class="badge bg-danger">Vencido</span>
+{% else %}
+<span class="badge bg-warning text-dark">Pendiente</span>
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+
+</table>
+
+{% endif %}
+
+</div>
+
+</div>
+
+<!-- ================= DOCUMENTOS ================= -->
+<div class="tab-pane fade" id="docs">
+
+<div class="card p-4 text-center">
+<p class="text-muted">📎 Próximamente: archivos clínicos</p>
+</div>
+
+</div>
+
 </div>
 
 <script>
 
-// ===== FILTRO =====
+// ===== FILTRO DINÁMICO =====
 function filtrarFechas(){
+
     let desde = document.getElementById("fechaDesde").value
     let hasta = document.getElementById("fechaHasta").value
 
-    document.querySelectorAll(".timeline-item").forEach(item => {
-        let fecha = item.dataset.fecha
+    let desdeDate = desde ? new Date(desde) : null
+    let hastaDate = hasta ? new Date(hasta) : null
 
-        if((!desde || fecha >= desde) && (!hasta || fecha <= hasta)){
+    document.querySelectorAll(".timeline-item").forEach(item => {
+
+        let fechaTexto = item.dataset.fecha
+        let fechaItem = new Date(fechaTexto)
+
+        if(
+            (!desdeDate || fechaItem >= desdeDate) &&
+            (!hastaDate || fechaItem <= hastaDate)
+        ){
             item.style.display = "block"
         } else {
             item.style.display = "none"
         }
+
     })
 }
 
 // ===== ORDENAR =====
 document.addEventListener("DOMContentLoaded", function(){
+
     let container = document.querySelector(".timeline")
     let items = Array.from(document.querySelectorAll(".timeline-item"))
 
-    items.sort((a, b) => b.dataset.fecha.localeCompare(a.dataset.fecha))
+    items.sort((a, b) => new Date(b.dataset.fecha) - new Date(a.dataset.fecha))
     items.forEach(el => container.appendChild(el))
+
 })
 
 // ===== ANAMNESIS =====

@@ -1,83 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 
-<style>
-
-/* ===== HEADER ===== */
-.titulo-cliente{
-    font-weight: 600;
-    letter-spacing: 1px;
-}
-
-/* ===== TABS ===== */
-.nav-pills .nav-link {
-    border-radius: 10px;
-    margin-right: 5px;
-}
-.nav-pills .nav-link.active {
-    background: #2563eb;
-}
-
-/* ===== TIMELINE ===== */
-.timeline {
-    border-left: 3px solid #2563eb;
-    margin-left: 20px;
-    padding-left: 20px;
-}
-.timeline-item {
-    margin-bottom: 20px;
-    position: relative;
-}
-.timeline-item::before{
-    content: '';
-    position: absolute;
-    left: -28px;
-    top: 5px;
-    width: 12px;
-    height: 12px;
-    background: #2563eb;
-    border-radius: 50%;
-}
-.timeline-content {
-    background: white;
-    padding: 15px;
-    border-radius: 12px;
-    box-shadow: 0px 4px 15px rgba(0,0,0,0.08);
-    cursor: pointer;
-}
-
-/* ===== ODONTOGRAMA ===== */
-.fila-dientes{
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.diente{
-    width: 45px;
-    height: 55px;
-    background: #e2e8f0;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.diente.ok { background:#22c55e; color:white; }
-.diente.caries { background:#ef4444; color:white; }
-.diente.endodoncia { background:#f59e0b; color:white; }
-.diente.extraido { background:#334155; color:white; }
-
-.card { border-radius: 12px; }
-
-</style>
-
 <h3 class="mb-3 titulo-cliente">{{ cliente.nombre }}</h3>
 
-<!-- ===== TABS ===== -->
 <ul class="nav nav-pills mb-4">
 <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#historial">Historial</button></li>
 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#anamnesis">Anamnesis</button></li>
@@ -90,23 +15,10 @@
 <!-- ================= HISTORIAL ================= -->
 <div class="tab-pane fade show active" id="historial">
 
-<!-- FILTRO -->
-<div class="card p-3 mb-3">
-<div class="row">
-<div class="col-md-6">
-<input type="date" id="fechaDesde" class="form-control" oninput="filtrarFechas()">
-</div>
-<div class="col-md-6">
-<input type="date" id="fechaHasta" class="form-control" oninput="filtrarFechas()">
-</div>
-</div>
-</div>
-
 <div class="timeline">
 
-<!-- EVENTOS -->
 {% for e in eventos %}
-<div class="timeline-item" data-fecha="{{ e.fecha }}">
+<div class="timeline-item">
 <div class="timeline-content">
 <div class="d-flex justify-content-between">
 <h6>{{ e.titulo }}</h6>
@@ -117,9 +29,8 @@
 </div>
 {% endfor %}
 
-<!-- EVENTOS CLINICOS -->
 {% for ev in eventos_expandibles %}
-<div class="timeline-item" data-fecha="{{ ev.fecha }}">
+<div class="timeline-item">
 <div class="timeline-content" onclick="toggleDetalle({{ loop.index }})">
 
 <div class="d-flex justify-content-between">
@@ -178,7 +89,6 @@
 <button class="btn btn-success mt-3 w-100" onclick="guardarOdontograma()">Guardar</button>
 
 </div>
-
 </div>
 
 <!-- ================= PAGOS ================= -->
@@ -186,15 +96,39 @@
 <div class="card p-3">
 
 <table class="table">
-<tr><th>Cuota</th><th>Monto</th><th>Fecha</th><th>Estado</th></tr>
+<tr>
+<th>Cuota</th>
+<th>Monto</th>
+<th>Fecha</th>
+<th>Estado</th>
+<th>Acción</th>
+</tr>
+
 {% for c in cuotas %}
 <tr>
 <td>{{ c.numero }}</td>
 <td>{{ c.monto | gs }}</td>
 <td>{{ c.fecha_vencimiento }}</td>
-<td>{{ c.estado }}</td>
+
+<td>
+{% if c.estado == "PAGADO" %}
+<span class="badge bg-success">Pagado</span>
+{% else %}
+<span class="badge bg-warning text-dark">Pendiente</span>
+{% endif %}
+</td>
+
+<td>
+{% if c.estado != "PAGADO" %}
+<a href="/pagar_cuota/{{ c.id }}" class="btn btn-sm btn-success">
+Marcar pagado
+</a>
+{% endif %}
+</td>
+
 </tr>
 {% endfor %}
+
 </table>
 
 </div>
@@ -204,36 +138,13 @@
 
 <script>
 
-// FILTRO
-function filtrarFechas(){
-    let d = document.getElementById("fechaDesde").value
-    let h = document.getElementById("fechaHasta").value
-
-    document.querySelectorAll(".timeline-item").forEach(i=>{
-        let f = new Date(i.dataset.fecha.replace(" ","T"))
-        if((!d || f >= new Date(d)) && (!h || f <= new Date(h))){
-            i.style.display="block"
-        }else{
-            i.style.display="none"
-        }
-    })
-}
-
-// ORDEN
-document.addEventListener("DOMContentLoaded", ()=>{
-    let c = document.querySelector(".timeline")
-    let i = Array.from(document.querySelectorAll(".timeline-item"))
-    i.sort((a,b)=> new Date(b.dataset.fecha) - new Date(a.dataset.fecha))
-    i.forEach(x=>c.appendChild(x))
-})
-
 // DETALLE
 function toggleDetalle(id){
     let el = document.getElementById("detalle"+id)
     el.style.display = el.style.display === "none" ? "block" : "none"
 }
 
-// GUARDAR CLINICO
+// ✅ GUARDAR SOLO ANAMNESIS
 function guardarClinico(){
     fetch("/guardar_clinico/{{ cliente.id }}",{
         method:"POST",
@@ -242,10 +153,10 @@ function guardarClinico(){
             enfermedades: enfermedades.value,
             alergias: alergias.value,
             medicamentos: medicamentos.value,
-            observaciones: observaciones.value,
-            dientes: dientes
+            observaciones: observaciones.value
         })
-    }).then(()=> location.reload())
+    })
+    .then(()=> alert("Guardado correctamente"))
 }
 
 // ODONTOGRAMA
@@ -265,12 +176,14 @@ function seleccionarDiente(el){
     dientes[id]=next
 }
 
+// ✅ GUARDAR SOLO ODONTOGRAMA
 function guardarOdontograma(){
     fetch("/guardar_odontograma/{{ cliente.id }}",{
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify(dientes)
-    }).then(()=> location.reload())
+    })
+    .then(()=> alert("Odontograma guardado"))
 }
 
 </script>

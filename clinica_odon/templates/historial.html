@@ -45,7 +45,7 @@
 
 .timeline-content {
     background: white;
-    padding: 15px;
+    padding: 16px;
     border-radius: 14px;
     box-shadow: 0px 6px 20px rgba(0,0,0,0.05);
 }
@@ -55,10 +55,6 @@
     font-size: 13px;
     color: #64748b;
     margin-bottom: 4px;
-}
-
-textarea{
-    border-radius: 10px !important;
 }
 
 /* ===== ODONTOGRAMA ===== */
@@ -86,26 +82,47 @@ textarea{
     transform: scale(1.1);
 }
 
-/* Estados clínicos */
 .diente.ok { background: #22c55e; color:white; }
 .diente.caries { background: #ef4444; color:white; }
 .diente.endodoncia { background: #f59e0b; color:white; }
 .diente.extraido { background: #334155; color:white; }
-
-/* ===== CARD ===== */
-.card{
-    border-radius: 16px;
-}
 
 </style>
 
 <h3 class="mb-4 titulo-cliente">{{ cliente.nombre }}</h3>
 
 <ul class="nav nav-pills mb-4">
-<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#historial">Historial</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#anamnesis">Anamnesis</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#odontograma">Odontograma</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pagos">Pagos</button></li>
+
+<li class="nav-item">
+<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#historial">
+Historial
+</button>
+</li>
+
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#anamnesis">
+Historia Clínica
+</button>
+</li>
+
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#odontograma">
+Odontograma
+</button>
+</li>
+
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#pagos">
+Cobros
+</button>
+</li>
+
+<li class="nav-item ms-auto">
+<a href="/pagos" class="btn btn-outline-dark btn-sm">
+Ir a pagos
+</a>
+</li>
+
 </ul>
 
 <div class="tab-content">
@@ -116,6 +133,7 @@ textarea{
 <div class="timeline">
 
 {% for e in eventos %}
+
 <div class="timeline-item">
 <div class="timeline-content">
 
@@ -124,10 +142,30 @@ textarea{
 <small class="text-muted">{{ e.fecha }}</small>
 </div>
 
-<p class="mb-0 text-muted">{{ e.descripcion }}</p>
+{% if e.tipo == "anamnesis" %}
+
+<p><b>Enfermedades:</b> {{ e.detalle.enfermedades }}</p>
+<p><b>Alergias:</b> {{ e.detalle.alergias }}</p>
+<p><b>Medicamentos:</b> {{ e.detalle.medicamentos }}</p>
+<p><b>Observaciones:</b> {{ e.detalle.observaciones }}</p>
+
+{% elif e.tipo == "odontograma" %}
+
+<p class="text-muted">Actualización del estado dental del paciente</p>
+
+{% elif e.tipo == "pago" %}
+
+<p class="text-muted">{{ e.descripcion }}</p>
+
+{% else %}
+
+<p class="text-muted">{{ e.descripcion }}</p>
+
+{% endif %}
 
 </div>
 </div>
+
 {% endfor %}
 
 </div>
@@ -251,7 +289,7 @@ function guardarClinico(){
             medicamentos: medicamentos.value,
             observaciones: observaciones.value
         })
-    }).then(()=> alert("Guardado correctamente"))
+    }).then(()=> location.reload())
 }
 
 // ODONTOGRAMA
@@ -276,7 +314,7 @@ function guardarOdontograma(){
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify(dientes)
-    }).then(()=> alert("Odontograma guardado"))
+    }).then(()=> location.reload())
 }
 
 </script>

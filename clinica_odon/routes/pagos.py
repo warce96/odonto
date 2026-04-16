@@ -12,7 +12,7 @@ def pagos():
 
     cuotas = Cuota.query.order_by(Cuota.fecha_vencimiento).all()
 
-    return render_template("pagos.html", cuotas=cuotas)
+    return render_template("pagos.html", cuotas=cuotas, today=date.today())
 
 
 # ================= CAMBIAR ESTADO =================

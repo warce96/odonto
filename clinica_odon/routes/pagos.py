@@ -1,5 +1,5 @@
 from app import app
-from flask import render_template, redirect, request
+from flask import render_template, redirect
 from flask_login import login_required
 from models import Cuota, db
 from datetime import date
@@ -25,7 +25,7 @@ def cambiar_estado(id):
     if not cuota:
         return "Error", 404
 
-    # 🔁 TOGGLE REAL
+    # 🔁 TOGGLE
     if cuota.estado == "PAGADO":
         cuota.estado = "PENDIENTE"
     else:

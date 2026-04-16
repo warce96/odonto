@@ -16,10 +16,8 @@ def historial(cliente_id):
 
     cliente = Cliente.query.get_or_404(cliente_id)
 
-    # ✅ SOLO fichas del cliente
     fichas = Ficha.query.filter_by(cliente_id=cliente_id).all()
 
-    # ✅ 🔥 FIX IMPORTANTE → SOLO cuotas del cliente
     cuotas = (
         Cuota.query
         .join(Cuota.pago)
@@ -31,7 +29,6 @@ def historial(cliente_id):
     anamnesis = Anamnesis.query.filter_by(cliente_id=cliente_id).first()
     odontograma = Odontograma.query.filter_by(cliente_id=cliente_id).first()
 
-    # ✅ 🔥 CAMBIO → ahora es dict (para odontograma pro)
     dientes = {}
     if odontograma and odontograma.dientes:
         try:
@@ -45,6 +42,7 @@ def historial(cliente_id):
     # ================= TRATAMIENTOS =================
     for f in fichas:
         eventos.append({
+            "tipo": "tratamiento",
             "titulo": "Tratamiento realizado",
             "descripcion": f"Monto: {gs(f.total)}",
             "fecha": f.fecha
@@ -59,7 +57,6 @@ def historial(cliente_id):
             dias = (c.fecha_vencimiento - hoy.date()).days
             titulo = "Pago vencido" if dias < 0 else "Pago pendiente"
 
-        # 🔥 FIX FECHA (sin desfase futuro)
         fecha_ok = datetime(
             c.fecha_vencimiento.year,
             c.fecha_vencimiento.month,
@@ -67,14 +64,13 @@ def historial(cliente_id):
         )
 
         eventos.append({
+            "tipo": "pago",
             "titulo": titulo,
             "descripcion": f"Cuota {c.numero} - {gs(c.monto)}",
             "fecha": fecha_ok
         })
 
     # ================= EVENTOS CLÍNICOS =================
-    eventos_expandibles = []
-
     eventos_db = EventoClinico.query.filter_by(cliente_id=cliente_id).all()
 
     for e in eventos_db:
@@ -83,21 +79,20 @@ def historial(cliente_id):
         except:
             detalle = {}
 
-        eventos_expandibles.append({
+        eventos.append({
+            "tipo": e.tipo,
             "titulo": e.titulo,
-            "fecha": e.fecha,
-            "detalle": detalle
+            "descripcion": detalle,
+            "fecha": e.fecha
         })
 
-    # ================= ORDEN CORRECTO =================
-    eventos = sorted(eventos, key=lambda x: x["fecha"], reverse=True)
-    eventos_expandibles = sorted(eventos_expandibles, key=lambda x: x["fecha"], reverse=True)
+    # ================= ORDEN FINAL =================
+    eventos.sort(key=lambda x: x["fecha"], reverse=True)
 
     return render_template(
         "historial.html",
         cliente=cliente,
         eventos=eventos,
-        eventos_expandibles=eventos_expandibles,
         cuotas=cuotas,
         anamnesis=anamnesis,
         dientes=dientes

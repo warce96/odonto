@@ -1,7 +1,105 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h3 class="mb-3 titulo-cliente">{{ cliente.nombre }}</h3>
+<style>
+
+/* ===== HEADER ===== */
+.titulo-cliente{
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* ===== TABS ===== */
+.nav-pills .nav-link {
+    border-radius: 12px;
+    margin-right: 6px;
+    padding: 10px 18px;
+}
+
+.nav-pills .nav-link.active {
+    background: #1e293b;
+}
+
+/* ===== TIMELINE ===== */
+.timeline {
+    border-left: 2px solid #e2e8f0;
+    margin-left: 15px;
+    padding-left: 20px;
+}
+
+.timeline-item {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.timeline-item::before{
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    background: #2563eb;
+    border-radius: 50%;
+}
+
+.timeline-content {
+    background: white;
+    padding: 15px;
+    border-radius: 14px;
+    box-shadow: 0px 6px 20px rgba(0,0,0,0.05);
+}
+
+/* ===== ANAMNESIS ===== */
+.label-form{
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+textarea{
+    border-radius: 10px !important;
+}
+
+/* ===== ODONTOGRAMA ===== */
+.fila-dientes{
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.diente{
+    width: 42px;
+    height: 52px;
+    border-radius: 10px;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.diente:hover{
+    transform: scale(1.1);
+}
+
+/* Estados clínicos */
+.diente.ok { background: #22c55e; color:white; }
+.diente.caries { background: #ef4444; color:white; }
+.diente.endodoncia { background: #f59e0b; color:white; }
+.diente.extraido { background: #334155; color:white; }
+
+/* ===== CARD ===== */
+.card{
+    border-radius: 16px;
+}
+
+</style>
+
+<h3 class="mb-4 titulo-cliente">{{ cliente.nombre }}</h3>
 
 <ul class="nav nav-pills mb-4">
 <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#historial">Historial</button></li>
@@ -20,49 +118,53 @@
 {% for e in eventos %}
 <div class="timeline-item">
 <div class="timeline-content">
-<div class="d-flex justify-content-between">
-<h6>{{ e.titulo }}</h6>
-<small>{{ e.fecha }}</small>
-</div>
-<p>{{ e.descripcion }}</p>
-</div>
-</div>
-{% endfor %}
 
-{% for ev in eventos_expandibles %}
-<div class="timeline-item">
-<div class="timeline-content" onclick="toggleDetalle({{ loop.index }})">
-
-<div class="d-flex justify-content-between">
-<h6>Historia Clínica</h6>
-<small>{{ ev.fecha }}</small>
+<div class="d-flex justify-content-between mb-1">
+<strong>{{ e.titulo }}</strong>
+<small class="text-muted">{{ e.fecha }}</small>
 </div>
 
-<div id="detalle{{ loop.index }}" style="display:none;">
-<hr>
-<p><b>Enfermedades:</b> {{ ev.detalle.enfermedades }}</p>
-<p><b>Alergias:</b> {{ ev.detalle.alergias }}</p>
-<p><b>Medicamentos:</b> {{ ev.detalle.medicamentos }}</p>
-<p><b>Observaciones:</b> {{ ev.detalle.observaciones }}</p>
-</div>
+<p class="mb-0 text-muted">{{ e.descripcion }}</p>
 
 </div>
 </div>
 {% endfor %}
 
 </div>
+
 </div>
 
 <!-- ================= ANAMNESIS ================= -->
 <div class="tab-pane fade" id="anamnesis">
 <div class="card p-4">
 
-<textarea id="enfermedades" class="form-control mb-2">{{ anamnesis.enfermedades if anamnesis else "" }}</textarea>
-<textarea id="alergias" class="form-control mb-2">{{ anamnesis.alergias if anamnesis else "" }}</textarea>
-<textarea id="medicamentos" class="form-control mb-2">{{ anamnesis.medicamentos if anamnesis else "" }}</textarea>
-<textarea id="observaciones" class="form-control mb-2">{{ anamnesis.observaciones if anamnesis else "" }}</textarea>
+<div class="row">
 
-<button class="btn btn-success w-100" onclick="guardarClinico()">Guardar</button>
+<div class="col-md-6">
+<div class="label-form">Enfermedades</div>
+<textarea id="enfermedades" class="form-control">{{ anamnesis.enfermedades if anamnesis else "" }}</textarea>
+</div>
+
+<div class="col-md-6">
+<div class="label-form">Alergias</div>
+<textarea id="alergias" class="form-control">{{ anamnesis.alergias if anamnesis else "" }}</textarea>
+</div>
+
+<div class="col-md-6 mt-3">
+<div class="label-form">Medicamentos</div>
+<textarea id="medicamentos" class="form-control">{{ anamnesis.medicamentos if anamnesis else "" }}</textarea>
+</div>
+
+<div class="col-md-6 mt-3">
+<div class="label-form">Observaciones</div>
+<textarea id="observaciones" class="form-control">{{ anamnesis.observaciones if anamnesis else "" }}</textarea>
+</div>
+
+</div>
+
+<button class="btn btn-dark mt-4 w-100" onclick="guardarClinico()">
+Guardar Historia Clínica
+</button>
 
 </div>
 </div>
@@ -72,9 +174,13 @@
 
 <div class="card p-4 text-center">
 
+<h6 class="mb-3 text-muted">Odontograma Clínico</h6>
+
 <div class="fila-dientes">
 {% for d in [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28] %}
-<div class="diente" data-id="{{ d }}" onclick="seleccionarDiente(this)">{{ d }}</div>
+<div class="diente" data-id="{{ d }}" onclick="seleccionarDiente(this)">
+{{ d }}
+</div>
 {% endfor %}
 </div>
 
@@ -82,11 +188,15 @@
 
 <div class="fila-dientes">
 {% for d in [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38] %}
-<div class="diente" data-id="{{ d }}" onclick="seleccionarDiente(this)">{{ d }}</div>
+<div class="diente" data-id="{{ d }}" onclick="seleccionarDiente(this)">
+{{ d }}
+</div>
 {% endfor %}
 </div>
 
-<button class="btn btn-success mt-3 w-100" onclick="guardarOdontograma()">Guardar</button>
+<button class="btn btn-dark mt-3 w-100" onclick="guardarOdontograma()">
+Guardar Odontograma
+</button>
 
 </div>
 </div>
@@ -95,13 +205,13 @@
 <div class="tab-pane fade" id="pagos">
 <div class="card p-3">
 
-<table class="table">
+<table class="table align-middle">
+
 <tr>
 <th>Cuota</th>
 <th>Monto</th>
 <th>Fecha</th>
 <th>Estado</th>
-<th>Acción</th>
 </tr>
 
 {% for c in cuotas %}
@@ -118,14 +228,6 @@
 {% endif %}
 </td>
 
-<td>
-{% if c.estado != "PAGADO" %}
-<a href="/pagar_cuota/{{ c.id }}" class="btn btn-sm btn-success">
-Marcar pagado
-</a>
-{% endif %}
-</td>
-
 </tr>
 {% endfor %}
 
@@ -138,13 +240,7 @@ Marcar pagado
 
 <script>
 
-// DETALLE
-function toggleDetalle(id){
-    let el = document.getElementById("detalle"+id)
-    el.style.display = el.style.display === "none" ? "block" : "none"
-}
-
-// ✅ GUARDAR SOLO ANAMNESIS
+// GUARDAR ANAMNESIS
 function guardarClinico(){
     fetch("/guardar_clinico/{{ cliente.id }}",{
         method:"POST",
@@ -155,8 +251,7 @@ function guardarClinico(){
             medicamentos: medicamentos.value,
             observaciones: observaciones.value
         })
-    })
-    .then(()=> alert("Guardado correctamente"))
+    }).then(()=> alert("Guardado correctamente"))
 }
 
 // ODONTOGRAMA
@@ -176,14 +271,12 @@ function seleccionarDiente(el){
     dientes[id]=next
 }
 
-// ✅ GUARDAR SOLO ODONTOGRAMA
 function guardarOdontograma(){
     fetch("/guardar_odontograma/{{ cliente.id }}",{
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify(dientes)
-    })
-    .then(()=> alert("Odontograma guardado"))
+    }).then(()=> alert("Odontograma guardado"))
 }
 
 </script>

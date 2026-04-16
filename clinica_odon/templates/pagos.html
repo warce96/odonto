@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>💳 Gestión de Cobros</h2>
+<h2>Gestión de Cobros</h2>
 
 <div class="card p-3">
 
-<table class="table table-hover">
+<table class="table table-hover align-middle">
 
 <tr>
 <th>#</th>
@@ -18,13 +18,17 @@
 {% for c in cuotas %}
 
 <tr class="
-{% if c.estado == 'VENCIDO' %}table-danger
-{% elif c.estado == 'PENDIENTE' %}table-warning
-{% else %}table-success{% endif %}
+{% if c.estado == 'PAGADO' %}table-success
+{% else %}
+    {% if c.fecha_vencimiento < today %}table-danger
+    {% else %}table-warning{% endif %}
+{% endif %}
 ">
 
 <td>{{ c.numero }}</td>
-<td>{{ "{:,.0f}".format(c.monto) }}</td>
+
+<td>₲ {{ "{:,.0f}".format(c.monto).replace(",", ".") }}</td>
+
 <td>{{ c.fecha_vencimiento }}</td>
 
 <td>
@@ -41,11 +45,25 @@
 </td>
 
 <td>
-{% if c.estado != "PAGADO" %}
-<a href="/pagar/{{ c.id }}" class="btn btn-sm btn-success">
-Cobrar
-</a>
-{% endif %}
+<form action="/cambiar_estado/{{ c.id }}" method="POST">
+
+    <button class="btn btn-sm 
+    {% if c.estado == 'PAGADO' %}
+        btn-outline-danger
+    {% else %}
+        btn-success
+    {% endif %}
+    ">
+
+        {% if c.estado == "PAGADO" %}
+            Deshacer
+        {% else %}
+            Cobrar
+        {% endif %}
+
+    </button>
+
+</form>
 </td>
 
 </tr>

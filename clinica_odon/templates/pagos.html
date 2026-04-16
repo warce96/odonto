@@ -29,11 +29,14 @@
 
 <td>
 {% if c.estado == "PAGADO" %}
-<span class="badge bg-success">Pagado</span>
-{% elif c.estado == "VENCIDO" %}
-<span class="badge bg-danger">Vencido</span>
+    <span class="badge bg-success">Pagado</span>
+
 {% else %}
-<span class="badge bg-warning text-dark">Pendiente</span>
+    {% if c.fecha_vencimiento < today %}
+        <span class="badge bg-danger">Vencido</span>
+    {% else %}
+        <span class="badge bg-warning text-dark">Pendiente</span>
+    {% endif %}
 {% endif %}
 </td>
 

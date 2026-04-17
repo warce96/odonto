@@ -1,29 +1,51 @@
-from flask import Flask
+from flask import Flask, request
 from config import Config
-from models import db, Usuario
+from models import db, Usuario, Odontograma
 from flask_login import LoginManager
+from werkzeug.security import generate_password_hash
+import json
+import os
 
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# ================= DB =================
 db.init_app(app)
-
-login_manager = LoginManager()
-login_manager.login_view = "login"
-login_manager.init_app(app)
-
-@app.template_filter('gs')
-def guaranies(valor):
-    return "₲ {:,.0f}".format(valor).replace(",", ".")
-@login_manager.user_loader
-def load_user(user_id):
-    return Usuario.query.get(int(user_id))
 
 with app.app_context():
     db.create_all()
 
-def formatear_moneda(valor):
+# ================= LOGIN =================
+login_manager = LoginManager()
+login_manager.login_view = "login"
+login_manager.init_app(app)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
+
+
+# ================= FILTRO MONEDA =================
+@app.template_filter('gs')
+def guaranies(valor):
     return "₲ {:,.0f}".format(valor).replace(",", ".")
+
+
+# ================= CREAR ADMIN AUTOMÁTICO =================
+@app.before_first_request
+def crear_admin():
+    admin = Usuario.query.filter_by(username="admin").first()
+
+    if not admin:
+        user = Usuario(username="admin")
+        user.set_password("admin123")  # usa tu método
+        db.session.add(user)
+        db.session.commit()
+        print("✅ Admin creado automáticamente")
+
+
+# ================= ODONTOGRAMA =================
 @app.route("/guardar_odontograma/<int:cliente_id>", methods=["POST"])
 def guardar_odontograma(cliente_id):
 
@@ -40,9 +62,9 @@ def guardar_odontograma(cliente_id):
     db.session.commit()
 
     return {"ok": True}
-app.jinja_env.filters['gs'] = formatear_moneda
 
-# rutas
+
+# ================= RUTAS =================
 from routes.auth import *
 from routes.dashboard import *
 from routes.clientes import *
@@ -51,5 +73,8 @@ from routes.pagos import *
 from routes.historial import *
 from routes.clinico import *
 
+
+# ================= RUN =================
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

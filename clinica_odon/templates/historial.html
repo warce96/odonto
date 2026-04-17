@@ -184,20 +184,20 @@ Cuota {{ c.numero }} - {{ c.monto }}
 {% endif %}
 
 <!-- 🔥 FIX ANAMNESIS -->
-{% elif e.tipo == "anamnesis" and e.detalle %}
+{% elif e.tipo == "anamnesis" and e.descripcion %}
 
-<p><b>Enfermedades:</b> {{ e.detalle.get("enfermedades","") }}</p>
-<p><b>Alergias:</b> {{ e.detalle.get("alergias","") }}</p>
-<p><b>Medicamentos:</b> {{ e.detalle.get("medicamentos","") }}</p>
-<p><b>Observaciones:</b> {{ e.detalle.get("observaciones","") }}</p>
+<p><b>Enfermedades:</b> {{ e.descripcion.get("enfermedades","") }}</p>
+<p><b>Alergias:</b> {{ e.descripcion.get("alergias","") }}</p>
+<p><b>Medicamentos:</b> {{ e.descripcion.get("medicamentos","") }}</p>
+<p><b>Observaciones:</b> {{ e.descripcion.get("observaciones","") }}</p>
 
 <!-- 🔥 FIX ODONTOGRAMA -->
-{% elif e.tipo == "odontograma" and e.detalle %}
+{% elif e.tipo == "odontograma" and e.descripcion %}
 
 <p><b>Estado odontológico:</b></p>
 
 <div class="fila-dientes">
-{% for d, estado in e.detalle.items() %}
+{% for d, estado in e.descripcion.items() %}
 <div class="diente" style="background: {{ colores.get(estado,'#e2e8f0') }}; color:white">
 {{ d }}
 </div>

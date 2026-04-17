@@ -8,12 +8,14 @@
     font-weight: 600;
     letter-spacing: 0.5px;
 }
+
 .cuotas-box{
     margin-top:10px;
     padding:10px;
     background:#f8fafc;
     border-radius:10px;
 }
+
 /* ===== TABS ===== */
 .nav-pills .nav-link {
     border-radius: 12px;
@@ -146,12 +148,14 @@ Ir a pagos
 <strong>{{ e.titulo }}</strong>
 <small class="text-muted">{{ e.fecha }}</small>
 </div>
-{% elif e.tipo == "tratamiento" %}
+
+<!-- 🔥 TRATAMIENTO -->
+{% if e.tipo == "tratamiento" %}
 
 <p class="text-muted"><b>{{ e.descripcion }}</b></p>
 
+{% if e.cuotas %}
 <div class="cuotas-box">
-
 <strong>Cuotas:</strong>
 
 <ul class="mb-0">
@@ -172,23 +176,27 @@ Cuota {{ c.numero }} - {{ c.monto }}
 </ul>
 
 </div>
-{% if e.tipo == "anamnesis" %}
+{% endif %}
 
-<p><b>Enfermedades:</b> {{ e.descripcion.enfermedades if e.descripcion else "" }}</p>
-<p><b>Alergias:</b> {{ e.descripcion.alergias if e.descripcion else "" }}</p>
-<p><b>Medicamentos:</b> {{ e.descripcion.medicamentos if e.descripcion else "" }}</p>
-<p><b>Observaciones:</b> {{ e.descripcion.observaciones if e.descripcion else "" }}</p>
+<!-- 🔥 ANAMNESIS -->
+{% elif e.tipo == "anamnesis" and e.descripcion %}
 
+<p><b>Enfermedades:</b> {{ e.descripcion.get("enfermedades","") }}</p>
+<p><b>Alergias:</b> {{ e.descripcion.get("alergias","") }}</p>
+<p><b>Medicamentos:</b> {{ e.descripcion.get("medicamentos","") }}</p>
+<p><b>Observaciones:</b> {{ e.descripcion.get("observaciones","") }}</p>
+
+<!-- 🔥 ODONTOGRAMA -->
 {% elif e.tipo == "odontograma" %}
 
 <p class="text-muted">Actualización del estado dental del paciente</p>
 
+<!-- 🔥 PAGO -->
 {% elif e.tipo == "pago" %}
 
-<p class="text-muted">
-💳 {{ e.descripcion }}
-</p>
+<p class="text-muted">💳 {{ e.descripcion }}</p>
 
+<!-- 🔥 DEFAULT -->
 {% else %}
 
 <p class="text-muted">{{ e.descripcion }}</p>
@@ -287,12 +295,14 @@ Guardar Odontograma
 {% for c in cuotas %}
 <tr>
 <td>{{ c.numero }}</td>
-<td>{{ c.monto | gs }}</td>
+<td>₲ {{ "{:,.0f}".format(c.monto).replace(",", ".") }}</td>
 <td>{{ c.fecha_vencimiento }}</td>
 
 <td>
 {% if c.estado == "PAGADO" %}
 <span class="badge bg-success">Pagado</span>
+{% elif c.estado == "VENCIDO" %}
+<span class="badge bg-danger">Vencido</span>
 {% else %}
 <span class="badge bg-warning text-dark">Pendiente</span>
 {% endif %}

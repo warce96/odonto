@@ -57,19 +57,23 @@
 .fila-dientes{
     display: flex;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     margin-bottom: 12px;
 }
 .diente{
-    width: 34px;
-    height: 38px;
-    border-radius: 8px;
+    width: 42px;
+    height: 52px;
+    border-radius: 10px;
     background: #e2e8f0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: 13px;
     cursor: pointer;
+    transition: 0.2s;
+}
+.diente:hover{
+    transform: scale(1.1);
 }
 
 /* ===== LEYENDA ===== */
@@ -153,7 +157,6 @@
 </small>
 </div>
 
-<!-- ================= TRATAMIENTO ================= -->
 {% if e.tipo == "tratamiento" %}
 
 <p><b>{{ e.descripcion }}</b></p>
@@ -186,53 +189,25 @@ Cuota {{ c.numero }} - {{ c.monto }}
 </div>
 {% endif %}
 
-<!-- ================= ANAMNESIS ================= -->
 {% elif e.tipo == "anamnesis" and e.descripcion %}
 
-<div class="card p-3" style="background:#f8fafc">
+<p><b>Enfermedades:</b> {{ e.descripcion.get("enfermedades","") }}</p>
+<p><b>Alergias:</b> {{ e.descripcion.get("alergias","") }}</p>
+<p><b>Medicamentos:</b> {{ e.descripcion.get("medicamentos","") }}</p>
+<p><b>Observaciones:</b> {{ e.descripcion.get("observaciones","") }}</p>
 
-<div class="row">
+{% elif e.tipo == "odontograma" and e.descripcion %}
 
-<div class="col-md-6">
-<b>🧬 Enfermedades</b>
-<p class="text-muted">{{ e.descripcion.get("enfermedades","-") }}</p>
-</div>
-
-<div class="col-md-6">
-<b>⚠️ Alergias</b>
-<p class="text-muted">{{ e.descripcion.get("alergias","-") }}</p>
-</div>
-
-<div class="col-md-6 mt-2">
-<b>💊 Medicamentos</b>
-<p class="text-muted">{{ e.descripcion.get("medicamentos","-") }}</p>
-</div>
-
-<div class="col-md-6 mt-2">
-<b>📝 Observaciones</b>
-<p class="text-muted">{{ e.descripcion.get("observaciones","-") }}</p>
-</div>
-
-</div>
-
-</div>
-
-<!-- ================= ODONTOGRAMA ================= -->
-{% elif e.tipo == "odontograma" and e.detalle %}
-
-<p><b>🦷 Estado odontológico:</b></p>
+<p><b>Estado odontológico:</b></p>
 
 <div class="fila-dientes">
-{% for d, estado in e.detalle.items() %}
-<div class="diente"
-     style="background: {{ colores.get(estado,'#e2e8f0') }};
-            color:white;">
+{% for d, estado in e.descripcion.items() %}
+<div class="diente" style="background: {{ colores.get(estado,'#e2e8f0') }}; color:white">
 {{ d }}
 </div>
 {% endfor %}
 </div>
 
-<!-- ================= PAGOS ================= -->
 {% elif e.tipo == "pago" %}
 
 <p>💳 {{ e.descripcion }}</p>
@@ -357,7 +332,75 @@ Cuota {{ c.numero }} - {{ c.monto }}
 
 <script>
 
-// (JS se mantiene igual que el tuyo)
+// ANAMNESIS
+function guardarClinico(){
+    fetch("/guardar_clinico/{{ cliente.id }}",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+            enfermedades: enfermedades.value,
+            alergias: alergias.value,
+            medicamentos: medicamentos.value,
+            observaciones: observaciones.value
+        })
+    }).then(()=> location.reload())
+}
+
+// ODONTOGRAMA
+let dientes = {{ dientes | tojson | safe }} || {}
+
+let estados = {
+    ok:{color:"#22c55e", nombre:"Sano"},
+    caries:{color:"#ef4444", nombre:"Caries"},
+    conducto:{color:"#3b82f6", nombre:"Conducto"},
+    corona:{color:"#a855f7", nombre:"Corona"}
+}
+
+function initEstados(){
+    let sel = document.getElementById("estadoSelector")
+    let ley = document.getElementById("leyenda")
+
+    sel.innerHTML=""
+    ley.innerHTML=""
+
+    for(let k in estados){
+        sel.innerHTML += `<option value="${k}">${estados[k].nombre}</option>`
+        ley.innerHTML += `
+        <div class="item-leyenda">
+            <div class="color-box" style="background:${estados[k].color}"></div>
+            ${estados[k].nombre}
+        </div>`
+    }
+}
+
+function pintar(el){
+    let estado = document.getElementById("estadoSelector").value
+    let id = el.dataset.id
+    dientes[id]=estado
+    el.style.background = estados[estado].color
+    el.style.color="white"
+}
+
+function pintarInicial(){
+    document.querySelectorAll(".diente").forEach(el=>{
+        let id = el.dataset.id
+        if(dientes[id]){
+            el.style.background = estados[dientes[id]].color
+            el.style.color="white"
+        }
+    })
+}
+
+function guardarOdontograma(){
+    fetch("/guardar_odontograma/{{ cliente.id }}",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(dientes)
+    }).then(()=> location.reload())
+}
+
+initEstados()
+pintarInicial()
 
 </script>
 

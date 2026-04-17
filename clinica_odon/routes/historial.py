@@ -16,19 +16,13 @@ def historial(cliente_id):
 
     cliente = Cliente.query.get_or_404(cliente_id)
 
+    # ===== DATOS BASE =====
     fichas = Ficha.query.filter_by(cliente_id=cliente_id).all()
-
-    cuotas = (
-        Cuota.query
-        .join(Cuota.pago)
-        .join(Pago.ficha)
-        .filter(Ficha.cliente_id == cliente_id)
-        .all()
-    )
 
     anamnesis = Anamnesis.query.filter_by(cliente_id=cliente_id).first()
     odontograma = Odontograma.query.filter_by(cliente_id=cliente_id).first()
 
+    # ===== ODONTOGRAMA =====
     dientes = {}
     if odontograma and odontograma.dientes:
         try:
@@ -39,35 +33,40 @@ def historial(cliente_id):
     eventos = []
     hoy = datetime.now()
 
-    # ================= TRATAMIENTOS =================
+    # ================= TRATAMIENTOS + CUOTAS =================
     for f in fichas:
+
+        cuotas_ficha = (
+            Cuota.query
+            .join(Pago, Cuota.pago_id == Pago.id)
+            .filter(Pago.ficha_id == f.id)
+            .order_by(Cuota.numero)
+            .all()
+        )
+
+        cuotas_detalle = []
+
+        for c in cuotas_ficha:
+
+            if c.estado == "PAGADO":
+                estado = "PAGADO"
+            else:
+                dias = (c.fecha_vencimiento - hoy.date()).days
+                estado = "VENCIDO" if dias < 0 else "PENDIENTE"
+
+            cuotas_detalle.append({
+                "numero": c.numero,
+                "monto": gs(c.monto),
+                "estado": estado,
+                "fecha": c.fecha_vencimiento.strftime("%Y-%m-%d")
+            })
+
         eventos.append({
             "tipo": "tratamiento",
             "titulo": "Tratamiento realizado",
             "descripcion": f"Monto: {gs(f.total)}",
-            "fecha": f.fecha
-        })
-
-    # ================= CUOTAS =================
-    for c in cuotas:
-
-        if c.estado == "PAGADO":
-            titulo = "Pago recibido"
-        else:
-            dias = (c.fecha_vencimiento - hoy.date()).days
-            titulo = "Pago vencido" if dias < 0 else "Pago pendiente"
-
-        fecha_ok = datetime(
-            c.fecha_vencimiento.year,
-            c.fecha_vencimiento.month,
-            c.fecha_vencimiento.day
-        )
-
-        eventos.append({
-            "tipo": "pago",
-            "titulo": titulo,
-            "descripcion": f"Cuota {c.numero} - {gs(c.monto)}",
-            "fecha": fecha_ok
+            "fecha": f.fecha,
+            "cuotas": cuotas_detalle   # 🔥 cuotas dentro del tratamiento
         })
 
     # ================= EVENTOS CLÍNICOS =================
@@ -93,7 +92,6 @@ def historial(cliente_id):
         "historial.html",
         cliente=cliente,
         eventos=eventos,
-        cuotas=cuotas,
         anamnesis=anamnesis,
         dientes=dientes
     )

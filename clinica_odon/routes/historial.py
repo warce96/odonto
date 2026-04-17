@@ -16,10 +16,8 @@ def historial(cliente_id):
 
     cliente = Cliente.query.get_or_404(cliente_id)
 
-    # ===== DATOS BASE =====
     fichas = Ficha.query.filter_by(cliente_id=cliente_id).all()
 
-    # 🔥 CUOTAS PARA TAB PAGOS
     cuotas = (
         Cuota.query
         .join(Pago, Cuota.pago_id == Pago.id)
@@ -32,7 +30,6 @@ def historial(cliente_id):
     anamnesis = Anamnesis.query.filter_by(cliente_id=cliente_id).first()
     odontograma = Odontograma.query.filter_by(cliente_id=cliente_id).first()
 
-    # ===== ODONTOGRAMA =====
     dientes = {}
     if odontograma and odontograma.dientes:
         try:
@@ -119,14 +116,13 @@ def historial(cliente_id):
         eventos.append({
             "tipo": e.tipo,
             "titulo": e.titulo,
-            "descripcion": detalle,
+            "detalle": detalle,   # 🔥 FIX
+            "descripcion": None,
             "fecha": e.fecha
         })
 
-    # ================= ORDEN =================
     eventos.sort(key=lambda x: x["fecha"], reverse=True)
 
-    # 🔥 NUEVO: COLORES ODONTOGRAMA
     colores = {
         "ok": "#22c55e",
         "caries": "#ef4444",
@@ -142,5 +138,5 @@ def historial(cliente_id):
         cuotas=cuotas,
         anamnesis=anamnesis,
         dientes=dientes,
-        colores=colores  # 🔥 IMPORTANTE
+        colores=colores
     )

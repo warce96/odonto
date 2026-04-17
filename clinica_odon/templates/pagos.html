@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>💳 Gestión de Cobros</h2>
+<h2>💳 Gestión de Cobros (CRM)</h2>
+
+<input type="text" id="buscador" class="form-control mb-3" placeholder="🔍 Buscar cliente..." onkeyup="filtrar()">
 
 <div class="card p-3">
 
@@ -24,15 +26,19 @@
             "cliente": cliente,
             "tratamiento": tratamiento,
             "cuotas": [],
-            "total": 0
+            "total": 0,
+            "pagado": 0
         }}) %}
     {% endif %}
 
     {% set _ = grupos[key]["cuotas"].append(c) %}
     {% set _ = grupos[key].update({"total": grupos[key]["total"] + c.monto}) %}
 
-{% endfor %}
+    {% if c.estado == "PAGADO" %}
+        {% set _ = grupos[key].update({"pagado": grupos[key]["pagado"] + c.monto}) %}
+    {% endif %}
 
+{% endfor %}
 
 <table class="table">
 
@@ -41,7 +47,8 @@
 <th>Cliente</th>
 <th>Tratamiento</th>
 <th>Total</th>
-<th>Detalle</th>
+<th>Progreso</th>
+<th></th>
 </tr>
 </thead>
 
@@ -49,15 +56,40 @@
 
 {% for g in grupos.values() %}
 
-<tr style="background:#f1f5f9; cursor:pointer;" onclick="toggle('{{ loop.index }}')">
+{% set porcentaje = (g.pagado / g.total * 100) if g.total > 0 else 0 %}
+
+<tr class="fila-grupo" data-cliente="{{ g.cliente | lower }}" onclick="toggle('{{ loop.index }}')" style="cursor:pointer; background:#f8fafc">
+
 <td><b>{{ g.cliente }}</b></td>
 <td>{{ g.tratamiento }}</td>
-<td><b>₲ {{ "{:,.0f}".format(g.total).replace(",", ".") }}</b></td>
-<td>▼ Ver cuotas</td>
+<td>₲ {{ "{:,.0f}".format(g.total).replace(",", ".") }}</td>
+
+<td style="width:250px">
+
+<div style="background:#e5e7eb; border-radius:8px; overflow:hidden;">
+    <div style="
+        width: {{ porcentaje }}%;
+        background: {% if porcentaje == 100 %}#22c55e{% elif porcentaje > 50 %}#3b82f6{% else %}#f59e0b{% endif %};
+        color:white;
+        padding:3px;
+        font-size:12px;
+    ">
+        {{ porcentaje|round(0) }}%
+    </div>
+</div>
+
+<small>
+Pagado: ₲ {{ "{:,.0f}".format(g.pagado).replace(",", ".") }}
+</small>
+
+</td>
+
+<td>▼</td>
+
 </tr>
 
 <tr id="detalle-{{ loop.index }}" style="display:none;">
-<td colspan="4">
+<td colspan="5">
 
 <table class="table table-sm">
 
@@ -80,9 +112,7 @@
 
 <td>Cuota {{ c.numero }} de {{ c.pago.cuotas }}</td>
 
-<td>
-₲ {{ "{:,.0f}".format(c.monto).replace(",", ".") }}
-</td>
+<td>₲ {{ "{:,.0f}".format(c.monto).replace(",", ".") }}</td>
 
 <td>{{ c.fecha_vencimiento }}</td>
 
@@ -136,10 +166,30 @@
 </div>
 
 <script>
+
 function toggle(id){
     let fila = document.getElementById("detalle-" + id)
     fila.style.display = fila.style.display === "none" ? "" : "none"
 }
+
+// 🔍 FILTRO EN VIVO
+function filtrar(){
+    let input = document.getElementById("buscador").value.toLowerCase()
+    let filas = document.querySelectorAll(".fila-grupo")
+
+    filas.forEach(fila => {
+        let cliente = fila.getAttribute("data-cliente")
+
+        if(cliente.includes(input)){
+            fila.style.display = ""
+        }else{
+            fila.style.display = "none"
+            let id = fila.getAttribute("onclick").match(/\d+/)[0]
+            document.getElementById("detalle-" + id).style.display = "none"
+        }
+    })
+}
+
 </script>
 
 {% endblock %}

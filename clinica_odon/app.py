@@ -2,7 +2,6 @@ from flask import Flask, request
 from config import Config
 from models import db, Usuario, Odontograma
 from flask_login import LoginManager
-from werkzeug.security import generate_password_hash
 import json
 import os
 
@@ -14,6 +13,16 @@ db.init_app(app)
 
 with app.app_context():
     db.create_all()
+
+    # 🔥 CREAR ADMIN AUTOMÁTICO (FLASK 3 COMPATIBLE)
+    admin = Usuario.query.filter_by(username="admin").first()
+
+    if not admin:
+        user = Usuario(username="admin")
+        user.set_password("admin123")
+        db.session.add(user)
+        db.session.commit()
+        print("✅ Admin creado automáticamente")
 
 # ================= LOGIN =================
 login_manager = LoginManager()
@@ -30,19 +39,6 @@ def load_user(user_id):
 @app.template_filter('gs')
 def guaranies(valor):
     return "₲ {:,.0f}".format(valor).replace(",", ".")
-
-
-# ================= CREAR ADMIN AUTOMÁTICO =================
-@app.before_first_request
-def crear_admin():
-    admin = Usuario.query.filter_by(username="admin").first()
-
-    if not admin:
-        user = Usuario(username="admin")
-        user.set_password("admin123")  # usa tu método
-        db.session.add(user)
-        db.session.commit()
-        print("✅ Admin creado automáticamente")
 
 
 # ================= ODONTOGRAMA =================

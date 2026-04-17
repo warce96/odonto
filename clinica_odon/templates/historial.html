@@ -191,10 +191,47 @@ Cuota {{ c.numero }} - {{ c.monto }}
 
 {% elif e.tipo == "anamnesis" and e.descripcion %}
 
-<p><b>Enfermedades:</b> {{ e.descripcion.get("enfermedades","") }}</p>
-<p><b>Alergias:</b> {{ e.descripcion.get("alergias","") }}</p>
-<p><b>Medicamentos:</b> {{ e.descripcion.get("medicamentos","") }}</p>
-<p><b>Observaciones:</b> {{ e.descripcion.get("observaciones","") }}</p>
+<div class="row mt-2">
+
+    {% if e.descripcion.get("enfermedades") %}
+    <div class="col-md-6 mb-2">
+        <div class="p-2 bg-light rounded">
+            <small class="text-muted">Enfermedades</small><br>
+            <strong>{{ e.descripcion.get("enfermedades") }}</strong>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if e.descripcion.get("alergias") %}
+    <div class="col-md-6 mb-2">
+        <div class="p-2 bg-light rounded">
+            <small class="text-muted">Alergias</small><br>
+            <strong>{{ e.descripcion.get("alergias") }}</strong>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if e.descripcion.get("medicamentos") %}
+    <div class="col-md-6 mb-2">
+        <div class="p-2 bg-light rounded">
+            <small class="text-muted">Medicamentos</small><br>
+            <strong>{{ e.descripcion.get("medicamentos") }}</strong>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if e.descripcion.get("observaciones") %}
+    <div class="col-md-12 mb-2">
+        <div class="p-2 bg-light rounded">
+            <small class="text-muted">Observaciones</small><br>
+            <strong>{{ e.descripcion.get("observaciones") }}</strong>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+{% endif %}
 
 {% elif e.tipo == "odontograma" and e.descripcion %}
 

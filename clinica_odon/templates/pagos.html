@@ -73,7 +73,7 @@
 {% if c.estado == "PAGADO" %}
     <span class="badge bg-success">Pagado</span>
 {% else %}
-    {% if c.fecha_vencimiento < today %}
+    {% if c.fecha_vencimiento <= today %}
         <span class="badge bg-danger">Vencido</span>
     {% else %}
         <span class="badge bg-warning text-dark">Pendiente</span>

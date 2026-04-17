@@ -42,11 +42,14 @@ class Ficha(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     cliente_id = db.Column(db.Integer, db.ForeignKey("cliente.id"))
+
     total = db.Column(db.Float)
     costo_total = db.Column(db.Float)
+
+    descripcion = db.Column(db.Text)  # 👈 AGREGAR ESTO
+
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relación
     pagos = db.relationship("Pago", backref="ficha", lazy=True)
 
 

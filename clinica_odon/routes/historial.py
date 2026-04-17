@@ -19,7 +19,7 @@ def historial(cliente_id):
     # ===== DATOS BASE =====
     fichas = Ficha.query.filter_by(cliente_id=cliente_id).all()
 
-    # 🔥 IMPORTANTE: cuotas globales (para pestaña pagos)
+    # 🔥 CUOTAS PARA TAB PAGOS
     cuotas = (
         Cuota.query
         .join(Pago, Cuota.pago_id == Pago.id)
@@ -43,7 +43,7 @@ def historial(cliente_id):
     eventos = []
     hoy = datetime.now()
 
-    # ================= TRATAMIENTOS + CUOTAS =================
+    # ================= TRATAMIENTOS =================
     for f in fichas:
 
         cuotas_ficha = (
@@ -73,7 +73,6 @@ def historial(cliente_id):
                 "fecha": c.fecha_vencimiento.strftime("%Y-%m-%d")
             })
 
-        # 🔥 ESTADO DEL TRATAMIENTO
         total = f.total or 0
 
         if total_pagado >= total:
@@ -92,7 +91,7 @@ def historial(cliente_id):
             "cuotas": cuotas_detalle
         })
 
-    # ================= EVENTOS DE PAGOS (timeline) =================
+    # ================= PAGOS =================
     for c in cuotas:
 
         if c.estado == "PAGADO":
@@ -124,14 +123,24 @@ def historial(cliente_id):
             "fecha": e.fecha
         })
 
-    # ================= ORDEN FINAL =================
+    # ================= ORDEN =================
     eventos.sort(key=lambda x: x["fecha"], reverse=True)
+
+    # 🔥 NUEVO: COLORES ODONTOGRAMA
+    colores = {
+        "ok": "#22c55e",
+        "caries": "#ef4444",
+        "conducto": "#3b82f6",
+        "corona": "#a855f7",
+        "implante": "#0ea5e9"
+    }
 
     return render_template(
         "historial.html",
         cliente=cliente,
         eventos=eventos,
-        cuotas=cuotas,   # 🔥 CLAVE PARA TAB PAGOS
+        cuotas=cuotas,
         anamnesis=anamnesis,
-        dientes=dientes
+        dientes=dientes,
+        colores=colores  # 🔥 IMPORTANTE
     )

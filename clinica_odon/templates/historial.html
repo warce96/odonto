@@ -1,119 +1,407 @@
-from app import app
-from flask import render_template
-from flask_login import login_required
-from models import *
-from datetime import datetime
-import json
+{% extends "base.html" %}
+{% block content %}
 
+<style>
 
-def gs(valor):
-    return "₲ {:,.0f}".format(valor).replace(",", ".")
+/* ===== HEADER ===== */
+.titulo-cliente{
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
 
+.cuotas-box{
+    margin-top:10px;
+    padding:10px;
+    background:#f8fafc;
+    border-radius:10px;
+}
 
-@app.route("/historial/<int:cliente_id>")
-@login_required
-def historial(cliente_id):
+/* ===== TABS ===== */
+.nav-pills .nav-link {
+    border-radius: 12px;
+    margin-right: 6px;
+    padding: 10px 18px;
+}
+.nav-pills .nav-link.active {
+    background: #1e293b;
+}
 
-    cliente = Cliente.query.get_or_404(cliente_id)
+/* ===== TIMELINE ===== */
+.timeline {
+    border-left: 2px solid #e2e8f0;
+    margin-left: 15px;
+    padding-left: 20px;
+}
+.timeline-item {
+    margin-bottom: 20px;
+    position: relative;
+}
+.timeline-item::before{
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    background: #2563eb;
+    border-radius: 50%;
+}
+.timeline-content {
+    background: white;
+    padding: 16px;
+    border-radius: 14px;
+    box-shadow: 0px 6px 20px rgba(0,0,0,0.05);
+}
 
-    fichas = Ficha.query.filter_by(cliente_id=cliente_id).all()
+/* ===== ODONTOGRAMA ===== */
+.fila-dientes{
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.diente{
+    width: 42px;
+    height: 52px;
+    border-radius: 10px;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.diente:hover{
+    transform: scale(1.1);
+}
 
-    cuotas = (
-        Cuota.query
-        .join(Cuota.pago)
-        .join(Pago.ficha)
-        .filter(Ficha.cliente_id == cliente_id)
-        .all()
-    )
+/* ===== LEYENDA ===== */
+.leyenda{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:10px;
+    justify-content:center;
+}
+.item-leyenda{
+    display:flex;
+    align-items:center;
+    gap:5px;
+}
+.color-box{
+    width:15px;
+    height:15px;
+    border-radius:4px;
+}
 
-    anamnesis = Anamnesis.query.filter_by(cliente_id=cliente_id).first()
-    odontograma = Odontograma.query.filter_by(cliente_id=cliente_id).first()
+</style>
 
-    dientes = {}
-    if odontograma and odontograma.dientes:
-        try:
-            dientes = json.loads(odontograma.dientes)
-        except:
-            dientes = {}
+<h3 class="mb-4 titulo-cliente">{{ cliente.nombre }}</h3>
 
-    eventos = []
-    hoy = datetime.now()
+<ul class="nav nav-pills mb-4">
 
-    # ===== TRATAMIENTOS =====
-    for f in fichas:
+<li class="nav-item">
+<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#historial">Historial</button>
+</li>
 
-        cuotas_ficha = [c for c in cuotas if c.pago.ficha_id == f.id]
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#anamnesis">Historia Clínica</button>
+</li>
 
-        estado = "PENDIENTE"
-        if all(c.estado == "PAGADO" for c in cuotas_ficha):
-            estado = "PAGADO"
-        elif any(c.estado == "PAGADO" for c in cuotas_ficha):
-            estado = "PARCIAL"
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#odontograma">Odontograma</button>
+</li>
 
-        eventos.append({
-            "tipo": "tratamiento",
-            "titulo": "Tratamiento realizado",
-            "descripcion": f"Monto: {gs(f.total)}",
-            "fecha": f.fecha,
-            "estado": estado,
-            "cuotas": cuotas_ficha
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#pagos">Cobros</button>
+</li>
+
+<li class="nav-item ms-auto">
+<a href="/pagos" class="btn btn-outline-dark btn-sm">Ir a pagos</a>
+</li>
+
+</ul>
+
+<div class="tab-content">
+
+<!-- ================= HISTORIAL ================= -->
+<div class="tab-pane fade show active" id="historial">
+
+<div class="timeline">
+
+{% for e in eventos %}
+
+<div class="timeline-item">
+<div class="timeline-content">
+
+<div class="d-flex justify-content-between mb-1">
+<strong>
+
+{% if e.tipo == "tratamiento" %}
+🦷 Tratamiento
+{% elif e.tipo == "pago" %}
+💳 Pago
+{% elif e.tipo == "anamnesis" %}
+📋 Historia Clínica
+{% elif e.tipo == "odontograma" %}
+🦷 Odontograma
+{% else %}
+📌 {{ e.titulo }}
+{% endif %}
+
+</strong>
+
+<small class="text-muted">
+{{ e.fecha.strftime("%d/%m/%Y") if e.fecha else "" }}
+</small>
+</div>
+
+{% if e.tipo == "tratamiento" %}
+
+<p><b>{{ e.descripcion }}</b></p>
+
+<span class="badge
+{% if e.estado == "PAGADO" %}bg-success
+{% elif e.estado == "PARCIAL" %}bg-info text-dark
+{% else %}bg-warning text-dark{% endif %}">
+{{ e.estado }}
+</span>
+
+{% if e.cuotas %}
+<div class="cuotas-box">
+<strong>Cuotas:</strong>
+<ul>
+{% for c in e.cuotas %}
+<li>
+Cuota {{ c.numero }} - {{ c.monto }}
+
+<span class="badge
+{% if c.estado == "PAGADO" %}bg-success
+{% elif c.estado == "VENCIDO" %}bg-danger
+{% else %}bg-warning text-dark{% endif %}">
+{{ c.estado }}
+</span>
+
+</li>
+{% endfor %}
+</ul>
+</div>
+{% endif %}
+
+{% elif e.tipo == "anamnesis" and e.descripcion %}
+
+<p><b>Enfermedades:</b> {{ e.descripcion.get("enfermedades","") }}</p>
+<p><b>Alergias:</b> {{ e.descripcion.get("alergias","") }}</p>
+<p><b>Medicamentos:</b> {{ e.descripcion.get("medicamentos","") }}</p>
+<p><b>Observaciones:</b> {{ e.descripcion.get("observaciones","") }}</p>
+
+{% elif e.tipo == "odontograma" and e.descripcion %}
+
+<p><b>Estado odontológico:</b></p>
+
+<div class="fila-dientes">
+{% for d, estado in e.descripcion.items() %}
+<div class="diente" style="background: {{ colores.get(estado,'#e2e8f0') }}; color:white">
+{{ d }}
+</div>
+{% endfor %}
+</div>
+
+{% elif e.tipo == "pago" %}
+
+<p>💳 {{ e.descripcion }}</p>
+
+<span class="badge
+{% if e.estado == "PAGADO" %}bg-success
+{% elif e.estado == "VENCIDO" %}bg-danger
+{% else %}bg-warning text-dark{% endif %}">
+{{ e.estado }}
+</span>
+
+{% else %}
+<p>{{ e.descripcion }}</p>
+{% endif %}
+
+</div>
+</div>
+
+{% endfor %}
+
+</div>
+</div>
+
+<!-- ================= ANAMNESIS ================= -->
+<div class="tab-pane fade" id="anamnesis">
+<div class="card p-4">
+
+<div class="row">
+
+<div class="col-md-6">
+<div class="label-form">Enfermedades</div>
+<textarea id="enfermedades" class="form-control">{{ anamnesis.enfermedades if anamnesis else "" }}</textarea>
+</div>
+
+<div class="col-md-6">
+<div class="label-form">Alergias</div>
+<textarea id="alergias" class="form-control">{{ anamnesis.alergias if anamnesis else "" }}</textarea>
+</div>
+
+<div class="col-md-6 mt-3">
+<div class="label-form">Medicamentos</div>
+<textarea id="medicamentos" class="form-control">{{ anamnesis.medicamentos if anamnesis else "" }}</textarea>
+</div>
+
+<div class="col-md-6 mt-3">
+<div class="label-form">Observaciones</div>
+<textarea id="observaciones" class="form-control">{{ anamnesis.observaciones if anamnesis else "" }}</textarea>
+</div>
+
+</div>
+
+<button class="btn btn-dark mt-4 w-100" onclick="guardarClinico()">Guardar Historia Clínica</button>
+
+</div>
+</div>
+
+<!-- ================= ODONTOGRAMA ================= -->
+<div class="tab-pane fade" id="odontograma">
+
+<div class="card p-4 text-center">
+
+<h6 class="mb-3 text-muted">Odontograma Clínico</h6>
+
+<select id="estadoSelector" class="form-select mb-3"></select>
+
+<div class="fila-dientes">
+{% for d in [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28] %}
+<div class="diente" data-id="{{ d }}" onclick="pintar(this)">{{ d }}</div>
+{% endfor %}
+</div>
+
+<hr>
+
+<div class="fila-dientes">
+{% for d in [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38] %}
+<div class="diente" data-id="{{ d }}" onclick="pintar(this)">{{ d }}</div>
+{% endfor %}
+</div>
+
+<div id="leyenda" class="leyenda"></div>
+
+<button class="btn btn-dark mt-3 w-100" onclick="guardarOdontograma()">Guardar Odontograma</button>
+
+</div>
+</div>
+
+<!-- ================= PAGOS ================= -->
+<div class="tab-pane fade" id="pagos">
+<div class="card p-3">
+
+<table class="table align-middle">
+
+<tr>
+<th>Cuota</th>
+<th>Monto</th>
+<th>Fecha</th>
+<th>Estado</th>
+</tr>
+
+{% for c in cuotas %}
+<tr>
+<td>{{ c.numero }}</td>
+<td>₲ {{ "{:,.0f}".format(c.monto).replace(",", ".") }}</td>
+<td>{{ c.fecha_vencimiento }}</td>
+<td>
+<span class="badge
+{% if c.estado == "PAGADO" %}bg-success
+{% elif c.estado == "VENCIDO" %}bg-danger
+{% else %}bg-warning text-dark{% endif %}">
+{{ c.estado }}
+</span>
+</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// ANAMNESIS
+function guardarClinico(){
+    fetch("/guardar_clinico/{{ cliente.id }}",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+            enfermedades: enfermedades.value,
+            alergias: alergias.value,
+            medicamentos: medicamentos.value,
+            observaciones: observaciones.value
         })
+    }).then(()=> location.reload())
+}
 
-    # ===== PAGOS =====
-    for c in cuotas:
+// ODONTOGRAMA
+let dientes = {{ dientes | tojson | safe }} || {}
 
-        if c.estado == "PAGADO":
-            titulo = "Pago registrado"
-        else:
-            dias = (c.fecha_vencimiento - hoy.date()).days
-            titulo = "Pago vencido" if dias < 0 else "Pago pendiente"
+let estados = {
+    ok:{color:"#22c55e", nombre:"Sano"},
+    caries:{color:"#ef4444", nombre:"Caries"},
+    conducto:{color:"#3b82f6", nombre:"Conducto"},
+    corona:{color:"#a855f7", nombre:"Corona"}
+}
 
-        fecha_ok = datetime(
-            c.fecha_vencimiento.year,
-            c.fecha_vencimiento.month,
-            c.fecha_vencimiento.day
-        )
+function initEstados(){
+    let sel = document.getElementById("estadoSelector")
+    let ley = document.getElementById("leyenda")
 
-        eventos.append({
-            "tipo": "pago",
-            "titulo": titulo,
-            "descripcion": f"Cuota {c.numero} - {gs(c.monto)}",
-            "fecha": fecha_ok,
-            "estado": c.estado
-        })
+    sel.innerHTML=""
+    ley.innerHTML=""
 
-    # ===== EVENTOS CLÍNICOS =====
-    eventos_db = EventoClinico.query.filter_by(cliente_id=cliente_id).all()
-
-    for e in eventos_db:
-        try:
-            detalle = json.loads(e.descripcion)
-        except:
-            detalle = {}
-
-        eventos.append({
-            "tipo": e.tipo,
-            "titulo": e.titulo,
-            "descripcion": detalle,
-            "fecha": e.fecha
-        })
-
-    eventos.sort(key=lambda x: x["fecha"], reverse=True)
-
-    # 🔥 COLORES PARA ODONTOGRAMA
-    colores = {
-        "ok": "#22c55e",
-        "caries": "#ef4444",
-        "conducto": "#3b82f6",
-        "corona": "#a855f7"
+    for(let k in estados){
+        sel.innerHTML += `<option value="${k}">${estados[k].nombre}</option>`
+        ley.innerHTML += `
+        <div class="item-leyenda">
+            <div class="color-box" style="background:${estados[k].color}"></div>
+            ${estados[k].nombre}
+        </div>`
     }
+}
 
-    return render_template(
-        "historial.html",
-        cliente=cliente,
-        eventos=eventos,
-        cuotas=cuotas,
-        anamnesis=anamnesis,
-        dientes=dientes,
-        colores=colores
-    )
+function pintar(el){
+    let estado = document.getElementById("estadoSelector").value
+    let id = el.dataset.id
+    dientes[id]=estado
+    el.style.background = estados[estado].color
+    el.style.color="white"
+}
+
+function pintarInicial(){
+    document.querySelectorAll(".diente").forEach(el=>{
+        let id = el.dataset.id
+        if(dientes[id]){
+            el.style.background = estados[dientes[id]].color
+            el.style.color="white"
+        }
+    })
+}
+
+function guardarOdontograma(){
+    fetch("/guardar_odontograma/{{ cliente.id }}",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(dientes)
+    }).then(()=> location.reload())
+}
+
+initEstados()
+pintarInicial()
+
+</script>
+
+{% endblock %}

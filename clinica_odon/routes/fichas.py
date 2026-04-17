@@ -25,14 +25,14 @@ def ficha():
         total = limpiar_numero(request.form.get("total"))
         costo = limpiar_numero(request.form.get("costo"))
 
-        descripcion = request.form.get("descripcion")  # 🔥 CLAVE
+        descripcion = request.form.get("descripcion")
 
         # ================= GUARDAR FICHA =================
         ficha = Ficha(
             cliente_id=cliente_id,
             total=total,
             costo_total=costo,
-            descripcion=descripcion  # 🔥 NUEVO
+            descripcion=descripcion
         )
 
         db.session.add(ficha)
@@ -86,8 +86,8 @@ def ficha():
 
             periodo = int(request.form.get("periodo") or 30)
 
-for i in range(cuotas):
-    fecha_vencimiento = fecha_base + timedelta(days=periodo * i)
+            for i in range(cuotas):
+                fecha_vencimiento = fecha_base + timedelta(days=periodo * i)
 
                 cuota = Cuota(
                     pago_id=pago.id,

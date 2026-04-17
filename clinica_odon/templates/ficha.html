@@ -53,24 +53,18 @@
 
 <h5>💰 Tratamiento</h5>
 
-<label>
-Monto Total 
-<small class="text-muted">(Es lo que se le cobra al paciente)</small>
-</label>
-<input name="total" id="total" placeholder="Ej: 1.000.000" class="form-control" onkeyup="formatearNumero(this)">
+<label>Monto Total</label>
+<input name="total" id="total" placeholder="Ej: 1.000.000" class="form-control mb-2">
 
-<label>
-Costo 
-<small class="text-muted">(Gastos para realizar el tratamiento)</small>
-</label>
-<input name="costo" placeholder="Ej: 500.000" class="form-control" onkeyup="formatearNumero(this)">
+<label>Costo</label>
+<input name="costo" placeholder="Ej: 500.000" class="form-control mb-2">
 
-<label>IVA (%)</label>
-<input name="iva" id="iva" value="0" class="form-control mb-2">
+<textarea name="descripcion" placeholder="Descripción del tratamiento"
+class="form-control mb-3"></textarea>
 
-<textarea placeholder="Descripción del tratamiento" class="form-control mb-2"></textarea>
+<hr>
 
-<h6>💳 Pago</h6>
+<h5>💳 Pago</h5>
 
 <label>Tipo de pago</label>
 <select name="tipo" id="tipo" class="form-control mb-2">
@@ -79,30 +73,37 @@ Costo
 </select>
 
 <!-- CONTADO -->
-<div id="contado_box">
+<div id="contado_box" class="mb-3">
     <label>Fecha de pago</label>
-    <input type="date" name="fecha_pago" class="form-control mb-2">
+    <input type="date" name="fecha_pago" class="form-control">
 </div>
 
 <!-- CUOTAS -->
-<div id="cuotas_box" style="display:none;">
+<div id="cuotas_box" class="card p-3 mb-3" style="display:none;">
 
+<div class="row">
+
+<div class="col-md-6">
 <label>Interés (%)</label>
 <input name="interes" id="interes" value="0" class="form-control mb-2">
+</div>
 
+<div class="col-md-6">
 <label>Cantidad de cuotas</label>
 <input name="cuotas" id="cuotas" value="1" class="form-control mb-2">
+</div>
 
-<label>Fecha inicio de cobro</label>
+<div class="col-md-6">
+<label>Fecha inicio</label>
 <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control mb-2">
+</div>
 
+<div class="col-md-6">
 <label>Periodicidad</label>
 <select name="periodo" id="periodo" class="form-control mb-2">
     <option value="30">Mensual</option>
     <option value="15">Quincenal</option>
-    <option value="180">Semestral</option>
 </select>
-
 </div>
 
 </div>
@@ -110,8 +111,14 @@ Costo
 </div>
 
 <!-- ================= SIMULACIÓN ================= -->
-<h6 class="mt-4">📊 Simulación de Pagos</h6>
+<div id="simulacion_box" class="card p-3" style="display:none;">
+<h6>📊 Simulación de Pagos</h6>
 <div id="simulacion"></div>
+</div>
+
+</div>
+
+</div>
 
 <button class="btn btn-success w-100 mt-3">Guardar Ficha</button>
 
@@ -126,34 +133,42 @@ function formato(num){
     return new Intl.NumberFormat('es-PY').format(num)
 }
 
-// ================= TOGGLE TIPO =================
-document.getElementById("tipo").addEventListener("change", function(){
-
-    if(this.value === "cuotas"){
-        document.getElementById("cuotas_box").style.display = "block"
-        document.getElementById("contado_box").style.display = "none"
-    }else{
-        document.getElementById("cuotas_box").style.display = "none"
-        document.getElementById("contado_box").style.display = "block"
-    }
-
-})
-
 // ================= FORMATEO INPUT =================
 document.getElementById("total").addEventListener("input", function(){
     let valor = this.value.replace(/\./g,'').replace(/[^0-9]/g,'')
     this.value = formato(valor)
 })
 
+// ================= TOGGLE =================
+document.getElementById("tipo").addEventListener("change", function(){
+
+    let cuotasBox = document.getElementById("cuotas_box")
+    let contadoBox = document.getElementById("contado_box")
+    let simBox = document.getElementById("simulacion_box")
+
+    if(this.value === "cuotas"){
+        cuotasBox.style.display = "block"
+        contadoBox.style.display = "none"
+        simBox.style.display = "block"
+    }else{
+        cuotasBox.style.display = "none"
+        contadoBox.style.display = "block"
+        simBox.style.display = "none"
+    }
+
+})
+
 // ================= SIMULACIÓN =================
 document.addEventListener("input", function(){
 
-    let total = parseFloat(document.getElementById("total").value.replace(/\./g,'')) || 0
-    let interes = parseFloat(document.getElementById("interes")?.value) || 0
-    let cuotas = parseInt(document.getElementById("cuotas")?.value) || 1
-    let periodo = parseInt(document.getElementById("periodo")?.value) || 30
+    if(document.getElementById("tipo").value !== "cuotas") return
 
-    let fechaInicio = document.getElementById("fecha_inicio")?.value
+    let total = parseFloat(document.getElementById("total").value.replace(/\./g,'')) || 0
+    let interes = parseFloat(document.getElementById("interes").value) || 0
+    let cuotas = parseInt(document.getElementById("cuotas").value) || 1
+    let periodo = parseInt(document.getElementById("periodo").value) || 30
+
+    let fechaInicio = document.getElementById("fecha_inicio").value
     let fechaBase = fechaInicio ? new Date(fechaInicio) : new Date()
 
     let totalFinal = total * (1 + interes/100)
@@ -167,9 +182,10 @@ document.addEventListener("input", function(){
         fecha.setDate(fecha.getDate() + (periodo*i))
 
         html += `
-        <div class="card p-2 mb-2">
-            💳 Cuota ${i}: <b>${formato(monto)}</b><br>
-            📅 ${fecha.toLocaleDateString()}
+        <div class="d-flex justify-content-between border-bottom py-2">
+            <div>Cuota ${i}</div>
+            <div><b>${formato(monto)}</b></div>
+            <div>${fecha.toLocaleDateString()}</div>
         </div>`
     }
 

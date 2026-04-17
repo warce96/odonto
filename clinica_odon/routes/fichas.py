@@ -1,8 +1,9 @@
 from app import app
 from flask import render_template, request, redirect
 from flask_login import login_required
-from models import Cliente, Ficha, Pago, Cuota, db
+from models import Cliente, Ficha, Pago, Cuota, EventoClinico, db
 from datetime import date, timedelta
+import json
 
 
 # 🔧 función para limpiar números tipo 1.250.000
@@ -30,6 +31,20 @@ def ficha():
             costo_total=costo
         )
         db.session.add(ficha)
+        db.session.commit()
+
+        # 🔥 EVENTO CLÍNICO (CLAVE PARA HISTORIAL)
+        evento = EventoClinico(
+            cliente_id=cliente_id,
+            tipo="tratamiento",
+            titulo="Nuevo tratamiento registrado",
+            descripcion=json.dumps({
+                "total": total,
+                "costo": costo,
+                "detalle": request.form.get("descripcion")  # si usas textarea
+            })
+        )
+        db.session.add(evento)
         db.session.commit()
 
         # ===== DATOS DE PAGO =====

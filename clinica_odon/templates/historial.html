@@ -132,7 +132,49 @@
 <div class="d-flex justify-content-between mb-2">
 <strong>
 {% if e.tipo == "tratamiento" %}Tratamiento
-{% elif e.tipo == "pago" %}Pago
+{% elif e.tipo == "pago" %}
+
+{% set estado_real = e.estado if e.estado else "PENDIENTE" %}
+
+{% if estado_real != "PAGADO" %}
+    {% set hoy = namespace(vencido=false) %}
+    {% if e.fecha and e.fecha.date() < now().date() %}
+        {% set hoy.vencido = true %}
+    {% endif %}
+{% endif %}
+
+<div class="pago-item">
+
+<div class="punto"
+style="
+background:
+{% if estado_real == 'PAGADO' %}#22c55e
+{% elif e.fecha and e.fecha.date() < now().date() %}#ef4444
+{% else %}#facc15{% endif %}
+">
+</div>
+
+<div>
+
+<b>{{ e.descripcion }}</b><br>
+
+<small>
+
+{% if estado_real == "PAGADO" %}
+    Pagado
+{% else %}
+    {% if e.fecha and e.fecha.date() < now().date() %}
+        Vencido
+    {% else %}
+        Pendiente
+    {% endif %}
+{% endif %}
+
+</small>
+
+</div>
+
+</div>
 {% elif e.tipo == "anamnesis" %}Historia Clínica
 {% elif e.tipo == "odontograma" %}Odontograma
 {% else %}{{ e.titulo }}{% endif %}

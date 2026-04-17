@@ -8,7 +8,12 @@
     font-weight: 600;
     letter-spacing: 0.5px;
 }
-
+.cuotas-box{
+    margin-top:10px;
+    padding:10px;
+    background:#f8fafc;
+    border-radius:10px;
+}
 /* ===== TABS ===== */
 .nav-pills .nav-link {
     border-radius: 12px;
@@ -141,13 +146,38 @@ Ir a pagos
 <strong>{{ e.titulo }}</strong>
 <small class="text-muted">{{ e.fecha }}</small>
 </div>
+{% elif e.tipo == "tratamiento" %}
 
+<p class="text-muted"><b>{{ e.descripcion }}</b></p>
+
+<div class="cuotas-box">
+
+<strong>Cuotas:</strong>
+
+<ul class="mb-0">
+{% for c in e.cuotas %}
+<li>
+Cuota {{ c.numero }} - {{ c.monto }}
+
+{% if c.estado == "PAGADO" %}
+<span class="badge bg-success">Pagado</span>
+{% elif c.estado == "VENCIDO" %}
+<span class="badge bg-danger">Vencido</span>
+{% else %}
+<span class="badge bg-warning text-dark">Pendiente</span>
+{% endif %}
+
+</li>
+{% endfor %}
+</ul>
+
+</div>
 {% if e.tipo == "anamnesis" %}
 
-<p><b>Enfermedades:</b> {{ e.detalle.enfermedades }}</p>
-<p><b>Alergias:</b> {{ e.detalle.alergias }}</p>
-<p><b>Medicamentos:</b> {{ e.detalle.medicamentos }}</p>
-<p><b>Observaciones:</b> {{ e.detalle.observaciones }}</p>
+<p><b>Enfermedades:</b> {{ e.descripcion.enfermedades if e.descripcion else "" }}</p>
+<p><b>Alergias:</b> {{ e.descripcion.alergias if e.descripcion else "" }}</p>
+<p><b>Medicamentos:</b> {{ e.descripcion.medicamentos if e.descripcion else "" }}</p>
+<p><b>Observaciones:</b> {{ e.descripcion.observaciones if e.descripcion else "" }}</p>
 
 {% elif e.tipo == "odontograma" %}
 
@@ -155,7 +185,9 @@ Ir a pagos
 
 {% elif e.tipo == "pago" %}
 
-<p class="text-muted">{{ e.descripcion }}</p>
+<p class="text-muted">
+💳 {{ e.descripcion }}
+</p>
 
 {% else %}
 

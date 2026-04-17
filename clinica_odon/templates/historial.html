@@ -57,13 +57,6 @@
     box-shadow: 0px 6px 20px rgba(0,0,0,0.05);
 }
 
-/* ===== ANAMNESIS ===== */
-.label-form{
-    font-size: 13px;
-    color: #64748b;
-    margin-bottom: 4px;
-}
-
 /* ===== ODONTOGRAMA ===== */
 .fila-dientes{
     display: flex;
@@ -89,10 +82,26 @@
     transform: scale(1.1);
 }
 
-.diente.ok { background: #22c55e; color:white; }
-.diente.caries { background: #ef4444; color:white; }
-.diente.endodoncia { background: #f59e0b; color:white; }
-.diente.extraido { background: #334155; color:white; }
+/* ===== LEYENDA ===== */
+.leyenda{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:10px;
+    justify-content:center;
+}
+
+.item-leyenda{
+    display:flex;
+    align-items:center;
+    gap:5px;
+}
+
+.color-box{
+    width:15px;
+    height:15px;
+    border-radius:4px;
+}
 
 </style>
 
@@ -149,36 +158,31 @@ Ir a pagos
 <small class="text-muted">{{ e.fecha }}</small>
 </div>
 
-<!-- 🔥 TRATAMIENTO -->
 {% if e.tipo == "tratamiento" %}
 
-<p class="text-muted"><b>{{ e.descripcion }}</b></p>
+<p><b>{{ e.descripcion }}</b></p>
 
 {% if e.cuotas %}
 <div class="cuotas-box">
 <strong>Cuotas:</strong>
-
-<ul class="mb-0">
+<ul>
 {% for c in e.cuotas %}
 <li>
 Cuota {{ c.numero }} - {{ c.monto }}
 
-{% if c.estado == "PAGADO" %}
-<span class="badge bg-success">Pagado</span>
-{% elif c.estado == "VENCIDO" %}
-<span class="badge bg-danger">Vencido</span>
-{% else %}
-<span class="badge bg-warning text-dark">Pendiente</span>
-{% endif %}
+<span class="badge
+{% if c.estado == "PAGADO" %}bg-success
+{% elif c.estado == "VENCIDO" %}bg-danger
+{% else %}bg-warning text-dark{% endif %}">
+{{ c.estado }}
+</span>
 
 </li>
 {% endfor %}
 </ul>
-
 </div>
 {% endif %}
 
-<!-- 🔥 ANAMNESIS -->
 {% elif e.tipo == "anamnesis" and e.descripcion %}
 
 <p><b>Enfermedades:</b> {{ e.descripcion.get("enfermedades","") }}</p>
@@ -186,21 +190,24 @@ Cuota {{ c.numero }} - {{ c.monto }}
 <p><b>Medicamentos:</b> {{ e.descripcion.get("medicamentos","") }}</p>
 <p><b>Observaciones:</b> {{ e.descripcion.get("observaciones","") }}</p>
 
-<!-- 🔥 ODONTOGRAMA -->
-{% elif e.tipo == "odontograma" %}
+{% elif e.tipo == "odontograma" and e.descripcion %}
 
-<p class="text-muted">Actualización del estado dental del paciente</p>
+<p><b>Estado odontológico:</b></p>
 
-<!-- 🔥 PAGO -->
+<div class="fila-dientes">
+{% for d, estado in e.descripcion.items() %}
+<div class="diente" style="background: {{ colores.get(estado,'#e2e8f0') }}; color:white">
+{{ d }}
+</div>
+{% endfor %}
+</div>
+
 {% elif e.tipo == "pago" %}
 
-<p class="text-muted">💳 {{ e.descripcion }}</p>
+<p>💳 {{ e.descripcion }}</p>
 
-<!-- 🔥 DEFAULT -->
 {% else %}
-
-<p class="text-muted">{{ e.descripcion }}</p>
-
+<p>{{ e.descripcion }}</p>
 {% endif %}
 
 </div>
@@ -209,7 +216,6 @@ Cuota {{ c.numero }} - {{ c.monto }}
 {% endfor %}
 
 </div>
-
 </div>
 
 <!-- ================= ANAMNESIS ================= -->
@@ -254,11 +260,11 @@ Guardar Historia Clínica
 
 <h6 class="mb-3 text-muted">Odontograma Clínico</h6>
 
+<select id="estadoSelector" class="form-select mb-3"></select>
+
 <div class="fila-dientes">
 {% for d in [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28] %}
-<div class="diente" data-id="{{ d }}" onclick="seleccionarDiente(this)">
-{{ d }}
-</div>
+<div class="diente" data-id="{{ d }}" onclick="pintar(this)">{{ d }}</div>
 {% endfor %}
 </div>
 
@@ -266,11 +272,11 @@ Guardar Historia Clínica
 
 <div class="fila-dientes">
 {% for d in [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38] %}
-<div class="diente" data-id="{{ d }}" onclick="seleccionarDiente(this)">
-{{ d }}
-</div>
+<div class="diente" data-id="{{ d }}" onclick="pintar(this)">{{ d }}</div>
 {% endfor %}
 </div>
+
+<div id="leyenda" class="leyenda"></div>
 
 <button class="btn btn-dark mt-3 w-100" onclick="guardarOdontograma()">
 Guardar Odontograma
@@ -299,13 +305,12 @@ Guardar Odontograma
 <td>{{ c.fecha_vencimiento }}</td>
 
 <td>
-{% if c.estado == "PAGADO" %}
-<span class="badge bg-success">Pagado</span>
-{% elif c.estado == "VENCIDO" %}
-<span class="badge bg-danger">Vencido</span>
-{% else %}
-<span class="badge bg-warning text-dark">Pendiente</span>
-{% endif %}
+<span class="badge
+{% if c.estado == "PAGADO" %}bg-success
+{% elif c.estado == "VENCIDO" %}bg-danger
+{% else %}bg-warning text-dark{% endif %}">
+{{ c.estado }}
+</span>
 </td>
 
 </tr>
@@ -320,7 +325,7 @@ Guardar Odontograma
 
 <script>
 
-// GUARDAR ANAMNESIS
+// ANAMNESIS
 function guardarClinico(){
     fetch("/guardar_clinico/{{ cliente.id }}",{
         method:"POST",
@@ -334,21 +339,51 @@ function guardarClinico(){
     }).then(()=> location.reload())
 }
 
-// ODONTOGRAMA
+// ODONTOGRAMA PRO
 let dientes = {{ dientes | tojson | safe }} || {}
 
-document.querySelectorAll(".diente").forEach(el=>{
-    let id = el.dataset.id
-    if(dientes[id]) el.classList.add(dientes[id])
-})
+let estados = {
+    ok:{color:"#22c55e", nombre:"Sano"},
+    caries:{color:"#ef4444", nombre:"Caries"},
+    conducto:{color:"#3b82f6", nombre:"Conducto"},
+    corona:{color:"#a855f7", nombre:"Corona"}
+}
 
-function seleccionarDiente(el){
-    let id = el.dataset.id
-    let estados = ["ok","caries","endodoncia","extraido"]
-    let next = estados[(estados.indexOf(dientes[id]||"ok")+1)%estados.length]
+function initEstados(){
+    let sel = document.getElementById("estadoSelector")
+    let ley = document.getElementById("leyenda")
 
-    el.className="diente "+next
-    dientes[id]=next
+    sel.innerHTML=""
+    ley.innerHTML=""
+
+    for(let k in estados){
+        sel.innerHTML += `<option value="${k}">${estados[k].nombre}</option>`
+
+        ley.innerHTML += `
+        <div class="item-leyenda">
+            <div class="color-box" style="background:${estados[k].color}"></div>
+            ${estados[k].nombre}
+        </div>`
+    }
+}
+
+function pintar(el){
+    let estado = document.getElementById("estadoSelector").value
+    let id = el.dataset.id
+
+    dientes[id]=estado
+    el.style.background = estados[estado].color
+    el.style.color="white"
+}
+
+function pintarInicial(){
+    document.querySelectorAll(".diente").forEach(el=>{
+        let id = el.dataset.id
+        if(dientes[id]){
+            el.style.background = estados[dientes[id]].color
+            el.style.color="white"
+        }
+    })
 }
 
 function guardarOdontograma(){
@@ -358,6 +393,9 @@ function guardarOdontograma(){
         body: JSON.stringify(dientes)
     }).then(()=> location.reload())
 }
+
+initEstados()
+pintarInicial()
 
 </script>
 

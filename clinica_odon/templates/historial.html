@@ -56,7 +56,8 @@
     text-align:center;
     font-size:12px;
     cursor:pointer;
-    transition:0.2s;
+    background:#f1f5f9;
+    border:1px solid #cbd5e1;
 }
 .diente:hover{
     transform:scale(1.1);
@@ -70,22 +71,12 @@
     justify-content:center;
     flex-wrap:wrap;
 }
-.item-leyenda{
-    display:flex;
-    align-items:center;
-    gap:5px;
-}
 .color-box{
     width:15px;
     height:15px;
     border-radius:4px;
 }
-.diente{
-    border:1px solid #cbd5f5;
-    background:#f8fafc;
-    color:#1e293b;
-    font-weight:600;
-}
+
 /* PAGOS */
 .pago-item{
     display:flex;
@@ -135,52 +126,65 @@
 <div class="timeline-content">
 
 <div class="d-flex justify-content-between mb-2">
-<strong>
-{% if e.tipo == "tratamiento" %}Tratamiento
+
+<div>
+{% if e.tipo == "tratamiento" %}
+<strong>🦷 Tratamiento</strong>
+
 {% elif e.tipo == "pago" %}
+<strong>💳 Pago</strong>
 
-{% set estado_real = e.estado if e.estado else "PENDIENTE" %}
+{% elif e.tipo == "anamnesis" %}
+<strong>📋 Historia Clínica</strong>
 
-{% if estado_real != "PAGADO" %}
-    {% set hoy = namespace(vencido=false) %}
-    {% if e.fecha and e.fecha.date() < now().date() %}
-        {% set hoy.vencido = true %}
-    {% endif %}
+{% elif e.tipo == "odontograma" %}
+<strong>🦷 Odontograma</strong>
+
+{% else %}
+<strong>{{ e.titulo }}</strong>
 {% endif %}
+</div>
+
+<small class="text-muted">
+{{ e.fecha.strftime("%d/%m/%Y") if e.fecha else "" }}
+</small>
+
+</div>
+
+<!-- ================= TRATAMIENTO ================= -->
+{% if e.tipo == "tratamiento" %}
+<p><b>{{ e.descripcion }}</b></p>
+
+<!-- ================= PAGO ================= -->
+{% elif e.tipo == "pago" %}
 
 <div class="pago-item">
 
 <div class="punto"
 style="
 background:
-{% if estado_real == 'PAGADO' %}#22c55e
-{% elif e.fecha and e.fecha.date() < now().date() %}#ef4444
+{% if e.estado == 'PAGADO' %}#22c55e
+{% elif e.estado == 'VENCIDO' %}#ef4444
 {% else %}#facc15{% endif %}
 ">
 </div>
 
 <div>
-
-<b>{{ e.descripcion }}</b><br>
-
-<small>
-
-{% if estado_real == "PAGADO" %}
-    Pagado
+<b>
+{% if e.descripcion is mapping %}
+Cuota {{ e.descripcion.cuota }} - {{ e.descripcion.monto }}
 {% else %}
-    {% if e.fecha and e.fecha.date() < now().date() %}
-        Vencido
-    {% else %}
-        Pendiente
-    {% endif %}
+{{ e.descripcion }}
 {% endif %}
+</b><br>
 
-</small>
-
+<small>{{ e.estado }}</small>
 </div>
 
 </div>
-{% elif e.tipo == "anamnesis" and e.descripcion %}
+
+<!-- ================= ANAMNESIS ================= -->
+{% elif e.tipo == "anamnesis" and e.descripcion is mapping %}
 
 <div class="card border-0 shadow-sm mt-2">
 <div class="card-body">
@@ -216,16 +220,10 @@ Historia clínica
 </div>
 </div>
 
-{% endif %}
-{% elif e.tipo == "odontograma" and e.descripcion %}
+<!-- ================= ODONTOGRAMA ================= -->
+{% elif e.tipo == "odontograma" and e.descripcion is mapping %}
 
-<div class="mt-3">
-
-<div class="fw-semibold text-primary mb-2">
-Odontograma clínico
-</div>
-
-<div class="grid-odonto">
+<div class="grid-odonto mt-2">
 
 {% for diente, estado in e.descripcion.items() %}
 
@@ -233,86 +231,19 @@ Odontograma clínico
 style="
 background:
 {% if estado == 'ok' %}#22c55e
-{% elif estado == 'caries' %}#dc2626
-{% elif estado == 'conducto' %}#2563eb
-{% elif estado == 'corona' %}#7c3aed
-{% else %}#94a3b8{% endif %}
-;
+{% elif estado == 'caries' %}#ef4444
+{% elif estado == 'conducto' %}#3b82f6
+{% elif estado == 'corona' %}#a855f7
+{% else %}#94a3b8{% endif %};
 color:white;
 ">
-
 {{ diente }}
-
 </div>
 
 {% endfor %}
 
 </div>
 
-</div>
-
-{% endif %}
-{% else %}{{ e.titulo }}{% endif %}
-</strong>
-
-<small class="text-muted">
-{{ e.fecha.strftime("%d/%m/%Y") if e.fecha else "" }}
-</small>
-</div>
-
-{% if e.tipo == "tratamiento" %}
-<p><b>{{ e.descripcion }}</b></p>
-
-{% elif e.tipo == "anamnesis" and e.descripcion %}
-<div class="row">
-
-<div class="col-md-6">
-<label class="fw-semibold">Enfermedades</label>
-<textarea id="enfermedades" class="form-control shadow-sm">{{ anamnesis.enfermedades if anamnesis else "" }}</textarea>
-</div>
-
-<div class="col-md-6">
-<label class="fw-semibold">Alergias</label>
-<textarea id="alergias" class="form-control shadow-sm">{{ anamnesis.alergias if anamnesis else "" }}</textarea>
-</div>
-
-<div class="col-md-6 mt-3">
-<label class="fw-semibold">Medicamentos</label>
-<textarea id="medicamentos" class="form-control shadow-sm">{{ anamnesis.medicamentos if anamnesis else "" }}</textarea>
-</div>
-
-<div class="col-md-6 mt-3">
-<label class="fw-semibold">Observaciones</label>
-<textarea id="observaciones" class="form-control shadow-sm">{{ anamnesis.observaciones if anamnesis else "" }}</textarea>
-</div>
-
-</div>
-
-<button class="btn btn-dark mt-4 w-100" onclick="guardarClinico()">
-Guardar Historia Clínica
-</button>
-
-{% elif e.tipo == "odontograma" and e.descripcion %}
-<div class="grid-odonto mt-2">
-{% for diente, estado in e.descripcion.get("dientes",{}).items() %}
-<div class="diente" style="background:{{ estados_color.get(estado,'#94a3b8') }};color:white">
-{{ diente }}
-</div>
-{% endfor %}
-</div>
-
-{% elif e.tipo == "pago" %}
-<div class="pago-item">
-<div class="punto" style="background:
-{% if e.estado == 'PAGADO' %}#22c55e
-{% elif e.estado == 'VENCIDO' %}#ef4444
-{% else %}#facc15{% endif %}">
-</div>
-<div>
-<b>{{ e.descripcion }}</b><br>
-<small>{{ e.estado }}</small>
-</div>
-</div>
 {% endif %}
 
 </div>
@@ -377,6 +308,7 @@ Guardar Historia Clínica
 <b>Cuota {{ c.numero }} - ₲ {{ "{:,.0f}".format(c.monto).replace(",",".") }}</b><br>
 <small>{{ c.fecha_vencimiento }} - {{ c.estado }}</small>
 </div>
+
 </div>
 
 </div>
@@ -396,16 +328,7 @@ let estados = {
 ok:{color:"#22c55e", nombre:"Sano"},
 caries:{color:"#ef4444", nombre:"Caries"},
 conducto:{color:"#3b82f6", nombre:"Endodoncia"},
-corona:{color:"#a855f7", nombre:"Corona"},
-perdido:{color:"#1f2937", nombre:"Pieza perdida"}
-}
-
-let estados_color = {
-ok:"#22c55e",
-caries:"#ef4444",
-conducto:"#3b82f6",
-corona:"#a855f7",
-perdido:"#1f2937"
+corona:{color:"#a855f7", nombre:"Corona"}
 }
 
 function init(){
@@ -414,7 +337,7 @@ let ley = document.getElementById("leyenda")
 
 for(let k in estados){
 sel.innerHTML += `<option value="${k}">${estados[k].nombre}</option>`
-ley.innerHTML += `<div class="item-leyenda"><div class="color-box" style="background:${estados[k].color}"></div>${estados[k].nombre}</div>`
+ley.innerHTML += `<div><span class="color-box" style="background:${estados[k].color}"></span> ${estados[k].nombre}</div>`
 }
 }
 
@@ -422,22 +345,10 @@ function pintarEventos(){
 document.querySelectorAll(".diente").forEach(el=>{
 let id = el.dataset.id
 
-el.addEventListener("click", ()=>{
+el.onclick = ()=>{
 let estado = document.getElementById("estadoSelector").value
 dientes[id]=estado
 el.style.background = estados[estado].color
-el.style.color = "#fff"
-})
-
-el.addEventListener("contextmenu",(e)=>{
-e.preventDefault()
-delete dientes[id]
-el.style.background="#e2e8f0"
-el.style.color="#000"
-})
-
-if(dientes[id]){
-el.style.background = estados[dientes[id]].color
 el.style.color = "#fff"
 }
 })
@@ -446,7 +357,7 @@ el.style.color = "#fff"
 function resetOdonto(){
 dientes={}
 document.querySelectorAll(".diente").forEach(el=>{
-el.style.background="#e2e8f0"
+el.style.background="#f1f5f9"
 el.style.color="#000"
 })
 }
@@ -468,7 +379,7 @@ function guardarOdontograma(){
 fetch("/guardar_odontograma/{{ cliente.id }}",{
 method:"POST",
 headers:{ "Content-Type":"application/json" },
-body: JSON.stringify({ dientes })
+body: JSON.stringify(dientes)
 }).then(()=>location.reload())
 }
 

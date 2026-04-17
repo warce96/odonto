@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>Gestión de Cobros</h2>
+<h2>💳 Gestión de Cobros</h2>
 
 <div class="card p-3">
 
 <table class="table table-hover align-middle">
 
 <tr>
-<th>#</th>
+<th>Cliente</th>
+<th>Tratamiento</th>
+<th>Cuota</th>
 <th>Monto</th>
 <th>Vencimiento</th>
 <th>Estado</th>
@@ -25,12 +27,32 @@
 {% endif %}
 ">
 
-<td>{{ c.numero }}</td>
+<!-- 👤 CLIENTE -->
+<td>
+{{ c.pago.ficha.cliente.nombre if c.pago and c.pago.ficha and c.pago.ficha.cliente else "-" }}
+</td>
 
-<td>₲ {{ "{:,.0f}".format(c.monto).replace(",", ".") }}</td>
+<!-- 🦷 TRATAMIENTO -->
+<td>
+{{ c.pago.ficha.descripcion if c.pago and c.pago.ficha else "Tratamiento" }}
+</td>
 
-<td>{{ c.fecha_vencimiento }}</td>
+<!-- 🔢 CUOTA -->
+<td>
+Cuota {{ c.numero }} de {{ c.pago.cuotas if c.pago else "-" }}
+</td>
 
+<!-- 💰 MONTO -->
+<td>
+₲ {{ "{:,.0f}".format(c.monto).replace(",", ".") }}
+</td>
+
+<!-- 📅 FECHA -->
+<td>
+{{ c.fecha_vencimiento }}
+</td>
+
+<!-- 📊 ESTADO -->
 <td>
 {% if c.estado == "PAGADO" %}
     <span class="badge bg-success">Pagado</span>
@@ -44,24 +66,25 @@
 {% endif %}
 </td>
 
+<!-- 🔘 ACCIÓN -->
 <td>
 <form action="/cambiar_estado/{{ c.id }}" method="POST">
 
-    <button class="btn btn-sm 
-    {% if c.estado == 'PAGADO' %}
-        btn-outline-danger
-    {% else %}
-        btn-success
-    {% endif %}
-    ">
+<button class="btn btn-sm 
+{% if c.estado == 'PAGADO' %}
+    btn-outline-danger
+{% else %}
+    btn-success
+{% endif %}
+">
 
-        {% if c.estado == "PAGADO" %}
-            Deshacer
-        {% else %}
-            Cobrar
-        {% endif %}
+{% if c.estado == "PAGADO" %}
+    Deshacer
+{% else %}
+    Cobrar
+{% endif %}
 
-    </button>
+</button>
 
 </form>
 </td>

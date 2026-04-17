@@ -3,18 +3,12 @@
 
 <style>
 
-/* 🔥 ANIMACIONES POR PRIORIDAD */
+/* 🔥 ANIMACIONES */
 
 @keyframes pulse-red {
     0% { background-color: #dc3545; }
     50% { background-color: #ff6b6b; }
     100% { background-color: #dc3545; }
-}
-
-@keyframes pulse-dark {
-    0% { background-color: #212529; }
-    50% { background-color: #495057; }
-    100% { background-color: #212529; }
 }
 
 @keyframes glow-yellow {
@@ -29,19 +23,14 @@
     100% { opacity: 0.85; }
 }
 
-/* 🎯 CLASES */
+/* 🎯 ESTADOS */
 
 .estado-vencido {
     animation: pulse-red 1.2s infinite;
     color: white;
 }
 
-.estado-hoy {
-    animation: pulse-dark 1.5s infinite;
-    color: white;
-}
-
-.estado-semana {
+.estado-proximo {
     animation: glow-yellow 1.5s infinite;
 }
 
@@ -51,7 +40,7 @@
 
 </style>
 
-<h2 class="mb-4"> Panel General</h2>
+<h2 class="mb-4">Panel General</h2>
 
 <div class="row mb-4">
 
@@ -97,10 +86,9 @@
 
     <select id="filtro" class="form-select" onchange="filtrarAlertas()">
         <option value="ALL">Todos</option>
-        <option value="HOY">Hoy</option>
-        <option value="SEMANA">Esta semana</option>
-        <option value="MES">Este mes</option>
         <option value="VENCIDO">Vencidos</option>
+        <option value="PROXIMO">Próximos (7 días)</option>
+        <option value="MES">Este mes</option>
     </select>
 </div>
 
@@ -120,8 +108,9 @@
 <thead class="table-light">
 <tr>
 <th>Cliente</th>
+<th>Tratamiento</th>
 <th>Cuota</th>
-<th>Estado</th>
+<th>Vence en</th>
 <th>Monto</th>
 <th>Fecha</th>
 </tr>
@@ -133,27 +122,25 @@
 <tr data-estado="{{ a.estado }}"
 class="
 {% if a.estado == 'VENCIDO' %}estado-vencido
-{% elif a.estado == 'HOY' %}estado-hoy
-{% elif a.estado == 'SEMANA' %}estado-semana
+{% elif a.estado == 'PROXIMO' %}estado-proximo
 {% else %}estado-mes{% endif %}
 ">
 
 <td><strong>{{ a.cliente }}</strong></td>
 
-<td>#{{ a.cuota }}</td>
+<td>{{ a.tratamiento }}</td>
+
+<td>{{ a.cuota }}</td>
 
 <td>
 {% if a.estado == "VENCIDO" %}
-<span class="badge estado-vencido">Vencido</span>
+<span class="badge bg-danger">Vencido</span>
 
-{% elif a.estado == "HOY" %}
-<span class="badge estado-hoy">Hoy</span>
-
-{% elif a.estado == "SEMANA" %}
-<span class="badge bg-warning text-dark estado-semana">Semana</span>
+{% elif a.estado == "PROXIMO" %}
+<span class="badge bg-warning text-dark">Próximo</span>
 
 {% else %}
-<span class="badge bg-info estado-mes">Mes</span>
+<span class="badge bg-info">Este mes</span>
 {% endif %}
 </td>
 

@@ -5,7 +5,6 @@ from models import Cliente, Ficha, Cuota, Anamnesis, Odontograma, EventoClinico,
 from datetime import datetime
 import json
 
-
 def gs(valor):
     return "₲ {:,.0f}".format(valor).replace(",", ".")
 

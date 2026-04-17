@@ -56,9 +56,28 @@
     text-align:center;
     font-size:12px;
     color:white;
+    cursor:pointer;
 }
 
-/* PAGOS TIMELINE */
+/* LEYENDA */
+.leyenda{
+    display:flex;
+    gap:10px;
+    margin-top:10px;
+    justify-content:center;
+}
+.item-leyenda{
+    display:flex;
+    align-items:center;
+    gap:5px;
+}
+.color-box{
+    width:15px;
+    height:15px;
+    border-radius:4px;
+}
+
+/* PAGOS */
 .pago-item{
     display:flex;
     gap:10px;
@@ -127,70 +146,43 @@ Odontograma
 </small>
 </div>
 
-<!-- ================= TRATAMIENTO ================= -->
 {% if e.tipo == "tratamiento" %}
 <p><b>{{ e.descripcion }}</b></p>
 
-<!-- ================= ANAMNESIS ================= -->
 {% elif e.tipo == "anamnesis" and e.descripcion %}
 
 <div class="row mt-2">
-
-<div class="col-md-6 mb-2">
-<b>Enfermedades:</b><br>{{ e.descripcion.get("enfermedades","-") }}
+<div class="col-md-6"><b>Enfermedades:</b> {{ e.descripcion.get("enfermedades","-") }}</div>
+<div class="col-md-6"><b>Alergias:</b> {{ e.descripcion.get("alergias","-") }}</div>
+<div class="col-md-6"><b>Medicamentos:</b> {{ e.descripcion.get("medicamentos","-") }}</div>
+<div class="col-md-12"><b>Observaciones:</b> {{ e.descripcion.get("observaciones","-") }}</div>
 </div>
 
-<div class="col-md-6 mb-2">
-<b>Alergias:</b><br>{{ e.descripcion.get("alergias","-") }}
-</div>
-
-<div class="col-md-6 mb-2">
-<b>Medicamentos:</b><br>{{ e.descripcion.get("medicamentos","-") }}
-</div>
-
-<div class="col-md-12 mb-2">
-<b>Observaciones:</b><br>{{ e.descripcion.get("observaciones","-") }}
-</div>
-
-</div>
-
-<!-- ================= ODONTOGRAMA ================= -->
 {% elif e.tipo == "odontograma" and e.descripcion %}
 
 <div class="grid-odonto mt-2">
 {% for diente, estado in e.descripcion.get("dientes",{}).items() %}
 <div class="diente"
-style="
-background:
-{% if estado == 'ok' %}#22c55e
-{% elif estado == 'caries' %}#ef4444
-{% elif estado == 'conducto' %}#3b82f6
-{% else %}#a855f7{% endif %}
-">
+style="background: {{ estados_js[estado] if estado in estados_js else '#94a3b8' }}">
 {{ diente }}
 </div>
 {% endfor %}
 </div>
 
-<!-- ================= PAGOS ================= -->
 {% elif e.tipo == "pago" %}
 
 <div class="pago-item">
-
 <div class="punto"
-style="
-background:
+style="background:
 {% if e.estado == 'PAGADO' %}#22c55e
 {% elif e.estado == 'VENCIDO' %}#ef4444
-{% else %}#facc15{% endif %}
-">
+{% else %}#facc15{% endif %}">
 </div>
 
 <div>
-<div><b>{{ e.descripcion }}</b></div>
+<b>{{ e.descripcion }}</b><br>
 <small>{{ e.estado }}</small>
 </div>
-
 </div>
 
 {% endif %}
@@ -207,10 +199,10 @@ background:
 <div class="tab-pane fade" id="anamnesis">
 <div class="card p-4">
 
-<textarea id="enfermedades" class="form-control mb-2" placeholder="Enfermedades">{{ anamnesis.enfermedades if anamnesis else "" }}</textarea>
-<textarea id="alergias" class="form-control mb-2" placeholder="Alergias">{{ anamnesis.alergias if anamnesis else "" }}</textarea>
-<textarea id="medicamentos" class="form-control mb-2" placeholder="Medicamentos">{{ anamnesis.medicamentos if anamnesis else "" }}</textarea>
-<textarea id="observaciones" class="form-control mb-2" placeholder="Observaciones">{{ anamnesis.observaciones if anamnesis else "" }}</textarea>
+<textarea id="enfermedades" class="form-control mb-2">{{ anamnesis.enfermedades if anamnesis else "" }}</textarea>
+<textarea id="alergias" class="form-control mb-2">{{ anamnesis.alergias if anamnesis else "" }}</textarea>
+<textarea id="medicamentos" class="form-control mb-2">{{ anamnesis.medicamentos if anamnesis else "" }}</textarea>
+<textarea id="observaciones" class="form-control mb-2">{{ anamnesis.observaciones if anamnesis else "" }}</textarea>
 
 <button class="btn btn-dark w-100" onclick="guardarClinico()">Guardar</button>
 
@@ -230,6 +222,8 @@ background:
 {% endfor %}
 </div>
 
+<div id="leyenda" class="leyenda"></div>
+
 <button class="btn btn-dark mt-3 w-100" onclick="guardarOdontograma()">Guardar</button>
 
 </div>
@@ -239,33 +233,27 @@ background:
 <div class="tab-pane fade" id="pagos">
 
 <div class="timeline">
-
 {% for c in cuotas %}
 <div class="timeline-item">
 <div class="timeline-content">
 
 <div class="pago-item">
-
 <div class="punto"
-style="
-background:
+style="background:
 {% if c.estado == 'PAGADO' %}#22c55e
 {% elif c.estado == 'VENCIDO' %}#ef4444
-{% else %}#facc15{% endif %}
-">
+{% else %}#facc15{% endif %}">
 </div>
 
 <div>
-<div><b>Cuota {{ c.numero }} - ₲ {{ "{:,.0f}".format(c.monto).replace(",",".") }}</b></div>
+<b>Cuota {{ c.numero }} - ₲ {{ "{:,.0f}".format(c.monto).replace(",",".") }}</b><br>
 <small>{{ c.fecha_vencimiento }} - {{ c.estado }}</small>
 </div>
-
 </div>
 
 </div>
 </div>
 {% endfor %}
-
 </div>
 
 </div>
@@ -274,7 +262,41 @@ background:
 
 <script>
 
-// GUARDAR ANAMNESIS
+let dientes = {{ dientes | tojson | safe }} || {}
+
+let estados = {
+ok:{color:"#22c55e", nombre:"Sano"},
+caries:{color:"#ef4444", nombre:"Caries"},
+conducto:{color:"#3b82f6", nombre:"Conducto"},
+corona:{color:"#a855f7", nombre:"Corona"}
+}
+
+function init(){
+let sel = document.getElementById("estadoSelector")
+let ley = document.getElementById("leyenda")
+
+for(let k in estados){
+sel.innerHTML += `<option value="${k}">${estados[k].nombre}</option>`
+ley.innerHTML += `<div class="item-leyenda"><div class="color-box" style="background:${estados[k].color}"></div>${estados[k].nombre}</div>`
+}
+}
+
+function pintar(el){
+let estado = document.getElementById("estadoSelector").value
+let id = el.dataset.id
+dientes[id]=estado
+el.style.background = estados[estado].color
+}
+
+function pintarInicial(){
+document.querySelectorAll(".diente").forEach(el=>{
+let id = el.dataset.id
+if(dientes[id]){
+el.style.background = estados[dientes[id]].color
+}
+})
+}
+
 function guardarClinico(){
 fetch("/guardar_clinico/{{ cliente.id }}",{
 method:"POST",
@@ -288,23 +310,6 @@ observaciones: observaciones.value
 }).then(()=>location.reload())
 }
 
-// ODONTO
-let dientes = {{ dientes | tojson | safe }} || {}
-
-let estados = {
-ok:"#22c55e",
-caries:"#ef4444",
-conducto:"#3b82f6",
-corona:"#a855f7"
-}
-
-function pintar(el){
-let estado = document.getElementById("estadoSelector").value
-let id = el.dataset.id
-dientes[id]=estado
-el.style.background = estados[estado]
-}
-
 function guardarOdontograma(){
 fetch("/guardar_odontograma/{{ cliente.id }}",{
 method:"POST",
@@ -312,6 +317,9 @@ headers:{ "Content-Type":"application/json" },
 body: JSON.stringify({ dientes })
 }).then(()=>location.reload())
 }
+
+init()
+pintarInicial()
 
 </script>
 

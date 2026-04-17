@@ -1,7 +1,7 @@
 from app import app
 from flask import render_template
 from flask_login import login_required
-from models import Cliente, Ficha, Cuota, Anamnesis, Odontograma, EventoClinico, Pago
+from models import Cliente, Ficha, Cuota, Anamnesis, Odontograma, Pago
 from datetime import datetime
 import json
 
@@ -30,63 +30,16 @@ def historial(cliente_id):
     anamnesis = Anamnesis.query.filter_by(cliente_id=cliente_id).first()
     odontograma = Odontograma.query.filter_by(cliente_id=cliente_id).first()
 
-    # ===== ODONTOGRAMA =====
-    dientes = {}
-    if odontograma and odontograma.dientes:
-        try:
-            dientes = json.loads(odontograma.dientes)
-        except:
-            dientes = {}
-
     eventos = []
     hoy = datetime.now()
 
     # ================= TRATAMIENTOS =================
     for f in fichas:
-
-        cuotas_ficha = (
-            Cuota.query
-            .join(Pago, Cuota.pago_id == Pago.id)
-            .filter(Pago.ficha_id == f.id)
-            .order_by(Cuota.numero)
-            .all()
-        )
-
-        cuotas_detalle = []
-        total_pagado = 0
-
-        for c in cuotas_ficha:
-
-            if c.estado == "PAGADO":
-                estado = "PAGADO"
-                total_pagado += c.monto
-            else:
-                dias = (c.fecha_vencimiento - hoy.date()).days
-                estado = "VENCIDO" if dias < 0 else "PENDIENTE"
-
-            cuotas_detalle.append({
-                "numero": c.numero,
-                "monto": gs(c.monto),
-                "estado": estado,
-                "fecha": c.fecha_vencimiento.strftime("%Y-%m-%d")
-            })
-
-        total = f.total or 0
-
-        if total_pagado >= total:
-            estado_trat = "PAGADO"
-        elif total_pagado == 0:
-            estado_trat = "PENDIENTE"
-        else:
-            estado_trat = "PARCIAL"
-
         eventos.append({
             "tipo": "tratamiento",
-            "titulo": "Tratamiento realizado",
-            "descripcion": f"Monto: {gs(total)}",
-            "fecha": f.fecha,
-            "estado": estado_trat,
-            "cuotas": cuotas_detalle
+            "titulo": "Tratamiento",
+            "descripcion": getattr(f, "descripcion", f"Monto: {gs(f.total)}"),
+            "fecha": f.fecha
         })
 
     # ================= PAGOS =================
@@ -94,38 +47,43 @@ def historial(cliente_id):
 
         if c.estado == "PAGADO":
             estado = "PAGADO"
-            titulo = "Pago recibido"
         else:
             dias = (c.fecha_vencimiento - hoy.date()).days
             estado = "VENCIDO" if dias < 0 else "PENDIENTE"
-            titulo = "Pago vencido" if dias < 0 else "Pago pendiente"
 
         eventos.append({
             "tipo": "pago",
-            "titulo": titulo,
-            "descripcion": {
-                "cuota": c.numero,
-                "monto": gs(c.monto),
-                "estado": estado
-            },
+            "descripcion": f"Cuota {c.numero} - {gs(c.monto)}",
             "estado": estado,
             "fecha": datetime.combine(c.fecha_vencimiento, datetime.min.time())
         })
 
-    # ================= EVENTOS CLÍNICOS =================
-    eventos_db = EventoClinico.query.filter_by(cliente_id=cliente_id).all()
+    # ================= ANAMNESIS =================
+    if anamnesis:
+        eventos.append({
+            "tipo": "anamnesis",
+            "titulo": "Historia clínica",
+            "descripcion": {
+                "enfermedades": anamnesis.enfermedades,
+                "alergias": anamnesis.alergias,
+                "medicamentos": anamnesis.medicamentos,
+                "observaciones": anamnesis.observaciones
+            },
+            "fecha": anamnesis.fecha
+        })
 
-    for e in eventos_db:
+    # ================= ODONTOGRAMA =================
+    if odontograma and odontograma.dientes:
         try:
-            detalle = json.loads(e.descripcion)
+            dientes_json = json.loads(odontograma.dientes)
         except:
-            detalle = {}
+            dientes_json = {}
 
         eventos.append({
-            "tipo": e.tipo,
-            "titulo": e.titulo,
-            "descripcion": detalle,
-            "fecha": e.fecha
+            "tipo": "odontograma",
+            "titulo": "Odontograma",
+            "descripcion": dientes_json,
+            "fecha": odontograma.fecha
         })
 
     # ================= ORDEN =================
@@ -135,8 +93,7 @@ def historial(cliente_id):
         "ok": "#22c55e",
         "caries": "#ef4444",
         "conducto": "#3b82f6",
-        "corona": "#a855f7",
-        "implante": "#0ea5e9"
+        "corona": "#a855f7"
     }
 
     return render_template(
@@ -145,6 +102,6 @@ def historial(cliente_id):
         eventos=eventos,
         cuotas=cuotas,
         anamnesis=anamnesis,
-        dientes=dientes,
+        dientes={},
         colores=colores
     )

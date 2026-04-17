@@ -12,7 +12,7 @@ def guardar_clinico(cliente_id):
     try:
         data = request.get_json()
 
-        # ===== ANAMNESIS =====
+        # ===== GUARDAR ANAMNESIS =====
         anamnesis = Anamnesis.query.filter_by(cliente_id=cliente_id).first()
 
         if not anamnesis:
@@ -25,24 +25,20 @@ def guardar_clinico(cliente_id):
 
         db.session.add(anamnesis)
 
-        # ===== EVENTO CLÍNICO (solo anamnesis) =====
-        descripcion = json.dumps({
-            "tipo": "anamnesis",
-            "enfermedades": data.get("enfermedades"),
-            "alergias": data.get("alergias"),
-            "medicamentos": data.get("medicamentos"),
-            "observaciones": data.get("observaciones")
-        })
-
+        # ===== EVENTO PARA HISTORIAL (FIX REAL) =====
         evento = EventoClinico(
             cliente_id=cliente_id,
-            tipo="clinico",
-            titulo="Actualización clínica",
-            descripcion=descripcion
+            tipo="anamnesis",  # 🔥 CLAVE (ANTES ESTABA MAL)
+            titulo="Actualización de historia clínica",
+            descripcion=json.dumps({
+                "enfermedades": anamnesis.enfermedades,
+                "alergias": anamnesis.alergias,
+                "medicamentos": anamnesis.medicamentos,
+                "observaciones": anamnesis.observaciones
+            })
         )
 
         db.session.add(evento)
-
         db.session.commit()
 
         return jsonify({"status": "ok"})

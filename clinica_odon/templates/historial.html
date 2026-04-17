@@ -80,7 +80,12 @@
     height:15px;
     border-radius:4px;
 }
-
+.diente{
+    border:1px solid #cbd5f5;
+    background:#f8fafc;
+    color:#1e293b;
+    font-weight:600;
+}
 /* PAGOS */
 .pago-item{
     display:flex;
@@ -190,11 +195,32 @@ background:
 
 {% elif e.tipo == "anamnesis" and e.descripcion %}
 <div class="row">
-<div class="col-md-6"><b>Enfermedades:</b> {{ e.descripcion.get("enfermedades","-") }}</div>
-<div class="col-md-6"><b>Alergias:</b> {{ e.descripcion.get("alergias","-") }}</div>
-<div class="col-md-6"><b>Medicamentos:</b> {{ e.descripcion.get("medicamentos","-") }}</div>
-<div class="col-md-12"><b>Observaciones:</b> {{ e.descripcion.get("observaciones","-") }}</div>
+
+<div class="col-md-6">
+<label class="fw-semibold">Enfermedades</label>
+<textarea id="enfermedades" class="form-control shadow-sm">{{ anamnesis.enfermedades if anamnesis else "" }}</textarea>
 </div>
+
+<div class="col-md-6">
+<label class="fw-semibold">Alergias</label>
+<textarea id="alergias" class="form-control shadow-sm">{{ anamnesis.alergias if anamnesis else "" }}</textarea>
+</div>
+
+<div class="col-md-6 mt-3">
+<label class="fw-semibold">Medicamentos</label>
+<textarea id="medicamentos" class="form-control shadow-sm">{{ anamnesis.medicamentos if anamnesis else "" }}</textarea>
+</div>
+
+<div class="col-md-6 mt-3">
+<label class="fw-semibold">Observaciones</label>
+<textarea id="observaciones" class="form-control shadow-sm">{{ anamnesis.observaciones if anamnesis else "" }}</textarea>
+</div>
+
+</div>
+
+<button class="btn btn-dark mt-4 w-100" onclick="guardarClinico()">
+Guardar Historia Clínica
+</button>
 
 {% elif e.tipo == "odontograma" and e.descripcion %}
 <div class="grid-odonto mt-2">

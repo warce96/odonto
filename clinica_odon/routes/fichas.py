@@ -86,9 +86,8 @@ def ficha():
 
             periodo = int(request.form.get("periodo") or 30)
 
-            for i in range(cuotas):
-
-                fecha_vencimiento = fecha_base + timedelta(days=periodo * (i + 1))
+for i in range(cuotas):
+    fecha_vencimiento = fecha_base + timedelta(days=periodo * i)
 
                 cuota = Cuota(
                     pago_id=pago.id,

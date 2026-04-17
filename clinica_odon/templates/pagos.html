@@ -1,87 +1,101 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>Gestión de Cobros</h2>
+<h2>💳 Gestión de Cobros</h2>
 
 <div class="card p-3">
 
-<table class="table table-hover align-middle">
+{% set grupos = {} %}
+
+{% for c in cuotas %}
+
+    {% set cliente = c.pago.ficha.cliente.nombre if c.pago and c.pago.ficha and c.pago.ficha.cliente else "Sin cliente" %}
+    
+    {% if c.pago and c.pago.ficha.descripcion %}
+        {% set tratamiento = c.pago.ficha.descripcion %}
+    {% else %}
+        {% set tratamiento = "Tratamiento " ~ c.pago.ficha.fecha.strftime("%d/%m/%Y") %}
+    {% endif %}
+
+    {% set key = cliente ~ "|" ~ tratamiento %}
+
+    {% if key not in grupos %}
+        {% set _ = grupos.update({key: {
+            "cliente": cliente,
+            "tratamiento": tratamiento,
+            "cuotas": [],
+            "total": 0
+        }}) %}
+    {% endif %}
+
+    {% set _ = grupos[key]["cuotas"].append(c) %}
+    {% set _ = grupos[key].update({"total": grupos[key]["total"] + c.monto}) %}
+
+{% endfor %}
+
+
+<table class="table">
 
 <thead>
 <tr>
 <th>Cliente</th>
 <th>Tratamiento</th>
+<th>Total</th>
+<th>Detalle</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for g in grupos.values() %}
+
+<tr style="background:#f1f5f9; cursor:pointer;" onclick="toggle('{{ loop.index }}')">
+<td><b>{{ g.cliente }}</b></td>
+<td>{{ g.tratamiento }}</td>
+<td><b>₲ {{ "{:,.0f}".format(g.total).replace(",", ".") }}</b></td>
+<td>▼ Ver cuotas</td>
+</tr>
+
+<tr id="detalle-{{ loop.index }}" style="display:none;">
+<td colspan="4">
+
+<table class="table table-sm">
+
+<tr>
 <th>Cuota</th>
 <th>Monto</th>
 <th>Vencimiento</th>
 <th>Estado</th>
 <th>Acción</th>
 </tr>
-</thead>
 
-<tbody>
-
-{% for c in cuotas %}
+{% for c in g.cuotas %}
 
 <tr class="
 {% if c.estado == 'PAGADO' %}table-success
-{% else %}
-    {% if c.fecha_vencimiento < today %}table-danger
-    {% else %}table-warning{% endif %}
+{% elif c.fecha_vencimiento <= today %}table-danger
+{% else %}table-warning
 {% endif %}
 ">
 
-<!-- 👤 CLIENTE -->
-<td>
-{{ c.pago.ficha.cliente.nombre if c.pago and c.pago.ficha and c.pago.ficha.cliente else "-" }}
-</td>
+<td>Cuota {{ c.numero }} de {{ c.pago.cuotas }}</td>
 
-<!-- 🦷 TRATAMIENTO -->
-<td>
-{% if c.pago and c.pago.ficha %}
-    {% if c.pago.ficha.descripcion %}
-        {{ c.pago.ficha.descripcion }}
-    {% else %}
-        Tratamiento del {{ c.pago.ficha.fecha.strftime("%d/%m/%Y") }}
-    {% endif %}
-{% else %}
-    -
-{% endif %}
-</td>
-
-<!-- 🔢 CUOTA -->
-<td>
-{% if c.pago %}
-    Cuota {{ c.numero }} de {{ c.pago.cuotas }}
-{% else %}
-    {{ c.numero }}
-{% endif %}
-</td>
-
-<!-- 💰 MONTO -->
 <td>
 ₲ {{ "{:,.0f}".format(c.monto).replace(",", ".") }}
 </td>
 
-<!-- 📅 VENCIMIENTO -->
-<td>
-{{ c.fecha_vencimiento }}
-</td>
+<td>{{ c.fecha_vencimiento }}</td>
 
-<!-- 📊 ESTADO -->
 <td>
 {% if c.estado == "PAGADO" %}
     <span class="badge bg-success">Pagado</span>
+{% elif c.fecha_vencimiento <= today %}
+    <span class="badge bg-danger">Vencido</span>
 {% else %}
-    {% if c.fecha_vencimiento <= today %}
-        <span class="badge bg-danger">Vencido</span>
-    {% else %}
-        <span class="badge bg-warning text-dark">Pendiente</span>
-    {% endif %}
+    <span class="badge bg-warning text-dark">Pendiente</span>
 {% endif %}
 </td>
 
-<!-- 🔘 ACCIÓN -->
 <td>
 <form action="/cambiar_estado/{{ c.id }}" method="POST">
 
@@ -108,10 +122,24 @@
 
 {% endfor %}
 
+</table>
+
+</td>
+</tr>
+
+{% endfor %}
+
 </tbody>
 
 </table>
 
 </div>
+
+<script>
+function toggle(id){
+    let fila = document.getElementById("detalle-" + id)
+    fila.style.display = fila.style.display === "none" ? "" : "none"
+}
+</script>
 
 {% endblock %}

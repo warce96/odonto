@@ -180,8 +180,78 @@ background:
 </div>
 
 </div>
-{% elif e.tipo == "anamnesis" %}Historia Clínica
-{% elif e.tipo == "odontograma" %}Odontograma
+{% elif e.tipo == "anamnesis" and e.descripcion %}
+
+<div class="card border-0 shadow-sm mt-2">
+<div class="card-body">
+
+<div class="fw-semibold text-primary mb-3">
+Historia clínica
+</div>
+
+<div class="row g-2">
+
+<div class="col-md-6">
+<small class="text-muted">Enfermedades</small>
+<div class="p-2 border rounded">{{ e.descripcion.get("enfermedades","-") }}</div>
+</div>
+
+<div class="col-md-6">
+<small class="text-muted">Alergias</small>
+<div class="p-2 border rounded">{{ e.descripcion.get("alergias","-") }}</div>
+</div>
+
+<div class="col-md-6">
+<small class="text-muted">Medicamentos</small>
+<div class="p-2 border rounded">{{ e.descripcion.get("medicamentos","-") }}</div>
+</div>
+
+<div class="col-md-12">
+<small class="text-muted">Observaciones</small>
+<div class="p-2 border rounded">{{ e.descripcion.get("observaciones","-") }}</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+{% endif %}
+{% elif e.tipo == "odontograma" and e.descripcion %}
+
+<div class="mt-3">
+
+<div class="fw-semibold text-primary mb-2">
+Odontograma clínico
+</div>
+
+<div class="grid-odonto">
+
+{% for diente, estado in e.descripcion.items() %}
+
+<div class="diente"
+style="
+background:
+{% if estado == 'ok' %}#22c55e
+{% elif estado == 'caries' %}#dc2626
+{% elif estado == 'conducto' %}#2563eb
+{% elif estado == 'corona' %}#7c3aed
+{% else %}#94a3b8{% endif %}
+;
+color:white;
+">
+
+{{ diente }}
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+{% endif %}
 {% else %}{{ e.titulo }}{% endif %}
 </strong>
 

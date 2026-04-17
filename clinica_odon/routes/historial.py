@@ -90,20 +90,27 @@ def historial(cliente_id):
         })
 
     # ================= PAGOS =================
-    for c in cuotas:
+for c in cuotas:
 
-        if c.estado == "PAGADO":
-            titulo = "Pago recibido"
-        else:
-            dias = (c.fecha_vencimiento - hoy.date()).days
-            titulo = "Pago vencido" if dias < 0 else "Pago pendiente"
+    if c.estado == "PAGADO":
+        estado = "PAGADO"
+        titulo = "Pago recibido"
+    else:
+        dias = (c.fecha_vencimiento - hoy.date()).days
+        estado = "VENCIDO" if dias < 0 else "PENDIENTE"
+        titulo = "Pago vencido" if dias < 0 else "Pago pendiente"
 
-        eventos.append({
-            "tipo": "pago",
-            "titulo": titulo,
-            "descripcion": f"Cuota {c.numero} - {gs(c.monto)}",
-            "fecha": datetime.combine(c.fecha_vencimiento, datetime.min.time())
-        })
+    eventos.append({
+        "tipo": "pago",
+        "titulo": titulo,
+        "descripcion": {
+            "cuota": c.numero,
+            "monto": gs(c.monto),
+            "estado": estado
+        },
+        "estado": estado,  # 🔥 CLAVE
+        "fecha": datetime.combine(c.fecha_vencimiento, datetime.min.time())
+    })
 
     # ================= EVENTOS CLÍNICOS (🔥 FIX REAL) =================
     eventos_db = EventoClinico.query.filter_by(cliente_id=cliente_id).all()

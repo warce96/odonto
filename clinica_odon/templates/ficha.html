@@ -176,18 +176,20 @@ document.addEventListener("input", function(){
 
     let html = ""
 
-    for(let i=1;i<=cuotas;i++){
+for(let i=0;i<cuotas;i++){
 
-        let fecha = new Date(fechaBase)
-        fecha.setDate(fecha.getDate() + (periodo*i))
+    let fecha = new Date(fechaBase)
 
-        html += `
-        <div class="d-flex justify-content-between border-bottom py-2">
-            <div>Cuota ${i}</div>
-            <div><b>${formato(monto)}</b></div>
-            <div>${fecha.toLocaleDateString()}</div>
-        </div>`
-    }
+    // 👇 clave: la primera cuota usa fecha base
+    fecha.setDate(fecha.getDate() + (periodo*i))
+
+    html += `
+    <div class="d-flex justify-content-between border-bottom py-2">
+        <div>Cuota ${i+1}</div>
+        <div><b>${formato(monto)}</b></div>
+        <div>${fecha.toLocaleDateString()}</div>
+    </div>`
+}
 
     document.getElementById("simulacion").innerHTML = html
 

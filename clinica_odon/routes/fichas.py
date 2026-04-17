@@ -6,7 +6,7 @@ from datetime import date, timedelta
 import json
 
 
-# 🔧 función para limpiar números tipo 1.250.000
+# 🔧 limpiar número tipo 1.250.000
 def limpiar_numero(valor):
     if not valor:
         return 0
@@ -19,21 +19,26 @@ def ficha():
 
     if request.method == "POST":
 
-        # ===== DATOS PRINCIPALES =====
+        # ================= DATOS =================
         cliente_id = request.form.get("cliente_id")
 
         total = limpiar_numero(request.form.get("total"))
         costo = limpiar_numero(request.form.get("costo"))
 
+        descripcion = request.form.get("descripcion")  # 🔥 CLAVE
+
+        # ================= GUARDAR FICHA =================
         ficha = Ficha(
             cliente_id=cliente_id,
             total=total,
-            costo_total=costo
+            costo_total=costo,
+            descripcion=descripcion  # 🔥 NUEVO
         )
+
         db.session.add(ficha)
         db.session.commit()
 
-        # 🔥 EVENTO CLÍNICO (CLAVE PARA HISTORIAL)
+        # ================= EVENTO HISTORIAL =================
         evento = EventoClinico(
             cliente_id=cliente_id,
             tipo="tratamiento",
@@ -41,13 +46,14 @@ def ficha():
             descripcion=json.dumps({
                 "total": total,
                 "costo": costo,
-                "detalle": request.form.get("descripcion")  # si usas textarea
+                "detalle": descripcion
             })
         )
+
         db.session.add(evento)
         db.session.commit()
 
-        # ===== DATOS DE PAGO =====
+        # ================= PAGO =================
         tipo = request.form.get("tipo")
 
         interes = limpiar_numero(request.form.get("interes"))
@@ -62,17 +68,27 @@ def ficha():
             cuotas=cuotas,
             total_final=total_final
         )
+
         db.session.add(pago)
         db.session.commit()
 
-        # ===== GENERAR CUOTAS =====
+        # ================= CUOTAS =================
         if tipo == "cuotas":
 
             monto = total_final / cuotas
 
+            fecha_inicio = request.form.get("fecha_inicio")
+
+            if fecha_inicio:
+                fecha_base = date.fromisoformat(fecha_inicio)
+            else:
+                fecha_base = date.today()
+
+            periodo = int(request.form.get("periodo") or 30)
+
             for i in range(cuotas):
 
-                fecha_vencimiento = date.today() + timedelta(days=30 * (i + 1))
+                fecha_vencimiento = fecha_base + timedelta(days=periodo * (i + 1))
 
                 cuota = Cuota(
                     pago_id=pago.id,

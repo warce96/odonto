@@ -55,8 +55,11 @@
     border-radius:8px;
     text-align:center;
     font-size:12px;
-    color:white;
     cursor:pointer;
+    transition:0.2s;
+}
+.diente:hover{
+    transform:scale(1.1);
 }
 
 /* LEYENDA */
@@ -65,6 +68,7 @@
     gap:10px;
     margin-top:10px;
     justify-content:center;
+    flex-wrap:wrap;
 }
 .item-leyenda{
     display:flex;
@@ -82,7 +86,6 @@
     display:flex;
     gap:10px;
     align-items:center;
-    margin-bottom:10px;
 }
 .punto{
     width:10px;
@@ -126,19 +129,13 @@
 <div class="timeline-item">
 <div class="timeline-content">
 
-<div class="d-flex justify-content-between mb-1">
+<div class="d-flex justify-content-between mb-2">
 <strong>
-{% if e.tipo == "tratamiento" %}
-Tratamiento
-{% elif e.tipo == "pago" %}
-Pago
-{% elif e.tipo == "anamnesis" %}
-Historia Clínica
-{% elif e.tipo == "odontograma" %}
-Odontograma
-{% else %}
-{{ e.titulo }}
-{% endif %}
+{% if e.tipo == "tratamiento" %}Tratamiento
+{% elif e.tipo == "pago" %}Pago
+{% elif e.tipo == "anamnesis" %}Historia Clínica
+{% elif e.tipo == "odontograma" %}Odontograma
+{% else %}{{ e.titulo }}{% endif %}
 </strong>
 
 <small class="text-muted">
@@ -150,8 +147,7 @@ Odontograma
 <p><b>{{ e.descripcion }}</b></p>
 
 {% elif e.tipo == "anamnesis" and e.descripcion %}
-
-<div class="row mt-2">
+<div class="row">
 <div class="col-md-6"><b>Enfermedades:</b> {{ e.descripcion.get("enfermedades","-") }}</div>
 <div class="col-md-6"><b>Alergias:</b> {{ e.descripcion.get("alergias","-") }}</div>
 <div class="col-md-6"><b>Medicamentos:</b> {{ e.descripcion.get("medicamentos","-") }}</div>
@@ -159,32 +155,26 @@ Odontograma
 </div>
 
 {% elif e.tipo == "odontograma" and e.descripcion %}
-
 <div class="grid-odonto mt-2">
 {% for diente, estado in e.descripcion.get("dientes",{}).items() %}
-<div class="diente"
-style="background: {{ estados_js[estado] if estado in estados_js else '#94a3b8' }}">
+<div class="diente" style="background:{{ estados_color.get(estado,'#94a3b8') }};color:white">
 {{ diente }}
 </div>
 {% endfor %}
 </div>
 
 {% elif e.tipo == "pago" %}
-
 <div class="pago-item">
-<div class="punto"
-style="background:
+<div class="punto" style="background:
 {% if e.estado == 'PAGADO' %}#22c55e
 {% elif e.estado == 'VENCIDO' %}#ef4444
 {% else %}#facc15{% endif %}">
 </div>
-
 <div>
 <b>{{ e.descripcion }}</b><br>
 <small>{{ e.estado }}</small>
 </div>
 </div>
-
 {% endif %}
 
 </div>
@@ -218,13 +208,14 @@ style="background:
 
 <div class="grid-odonto">
 {% for d in range(11,49) %}
-<div class="diente" data-id="{{ d }}" onclick="pintar(this)">{{ d }}</div>
+<div class="diente" data-id="{{ d }}">{{ d }}</div>
 {% endfor %}
 </div>
 
 <div id="leyenda" class="leyenda"></div>
 
 <button class="btn btn-dark mt-3 w-100" onclick="guardarOdontograma()">Guardar</button>
+<button class="btn btn-outline-danger mt-2 w-100" onclick="resetOdonto()">Limpiar</button>
 
 </div>
 </div>
@@ -238,8 +229,7 @@ style="background:
 <div class="timeline-content">
 
 <div class="pago-item">
-<div class="punto"
-style="background:
+<div class="punto" style="background:
 {% if c.estado == 'PAGADO' %}#22c55e
 {% elif c.estado == 'VENCIDO' %}#ef4444
 {% else %}#facc15{% endif %}">
@@ -267,8 +257,17 @@ let dientes = {{ dientes | tojson | safe }} || {}
 let estados = {
 ok:{color:"#22c55e", nombre:"Sano"},
 caries:{color:"#ef4444", nombre:"Caries"},
-conducto:{color:"#3b82f6", nombre:"Conducto"},
-corona:{color:"#a855f7", nombre:"Corona"}
+conducto:{color:"#3b82f6", nombre:"Endodoncia"},
+corona:{color:"#a855f7", nombre:"Corona"},
+perdido:{color:"#1f2937", nombre:"Pieza perdida"}
+}
+
+let estados_color = {
+ok:"#22c55e",
+caries:"#ef4444",
+conducto:"#3b82f6",
+corona:"#a855f7",
+perdido:"#1f2937"
 }
 
 function init(){
@@ -281,19 +280,36 @@ ley.innerHTML += `<div class="item-leyenda"><div class="color-box" style="backgr
 }
 }
 
-function pintar(el){
-let estado = document.getElementById("estadoSelector").value
-let id = el.dataset.id
-dientes[id]=estado
-el.style.background = estados[estado].color
-}
-
-function pintarInicial(){
+function pintarEventos(){
 document.querySelectorAll(".diente").forEach(el=>{
 let id = el.dataset.id
+
+el.addEventListener("click", ()=>{
+let estado = document.getElementById("estadoSelector").value
+dientes[id]=estado
+el.style.background = estados[estado].color
+el.style.color = "#fff"
+})
+
+el.addEventListener("contextmenu",(e)=>{
+e.preventDefault()
+delete dientes[id]
+el.style.background="#e2e8f0"
+el.style.color="#000"
+})
+
 if(dientes[id]){
 el.style.background = estados[dientes[id]].color
+el.style.color = "#fff"
 }
+})
+}
+
+function resetOdonto(){
+dientes={}
+document.querySelectorAll(".diente").forEach(el=>{
+el.style.background="#e2e8f0"
+el.style.color="#000"
 })
 }
 
@@ -319,7 +335,7 @@ body: JSON.stringify({ dientes })
 }
 
 init()
-pintarInicial()
+pintarEventos()
 
 </script>
 

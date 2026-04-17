@@ -30,6 +30,7 @@ def historial(cliente_id):
     anamnesis = Anamnesis.query.filter_by(cliente_id=cliente_id).first()
     odontograma = Odontograma.query.filter_by(cliente_id=cliente_id).first()
 
+    # ===== ODONTOGRAMA =====
     dientes = {}
     if odontograma and odontograma.dientes:
         try:
@@ -104,7 +105,7 @@ def historial(cliente_id):
             "fecha": datetime.combine(c.fecha_vencimiento, datetime.min.time())
         })
 
-    # ================= EVENTOS CLÍNICOS =================
+    # ================= EVENTOS CLÍNICOS (🔥 FIX REAL) =================
     eventos_db = EventoClinico.query.filter_by(cliente_id=cliente_id).all()
 
     for e in eventos_db:
@@ -116,11 +117,11 @@ def historial(cliente_id):
         eventos.append({
             "tipo": e.tipo,
             "titulo": e.titulo,
-            "detalle": detalle,   # 🔥 FIX
-            "descripcion": None,
+            "descripcion": detalle,   # 🔥 UNIFICADO
             "fecha": e.fecha
         })
 
+    # ================= ORDEN =================
     eventos.sort(key=lambda x: x["fecha"], reverse=True)
 
     colores = {

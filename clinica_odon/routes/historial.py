@@ -9,7 +9,6 @@ from models import EstadoOdonto
 def gs(valor):
     return "₲ {:,.0f}".format(valor).replace(",", ".")
 
-
 @app.route("/historial/<int:cliente_id>")
 @login_required
 def historial(cliente_id):

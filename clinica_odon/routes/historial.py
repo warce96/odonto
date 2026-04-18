@@ -6,8 +6,6 @@ from datetime import datetime
 import json
 from models import EstadoOdonto
 
-estados = EstadoOdonto.query.all()
-
 def gs(valor):
     return "₲ {:,.0f}".format(valor).replace(",", ".")
 
@@ -113,5 +111,6 @@ def historial(cliente_id):
         cuotas=cuotas,
         anamnesis=anamnesis,
         dientes=dientes,
-        colores=colores
+        colores=colores,
+        estados=estados
     )

@@ -43,7 +43,28 @@
     border-radius:12px;
     box-shadow:0px 4px 12px rgba(0,0,0,0.05);
 }
+.fila-dientes{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+}
 
+.diente{
+    width:42px;
+    height:52px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:600;
+    transition:0.2s;
+}
+
+.diente:hover{
+    transform:scale(1.1);
+}
 /* ODONTO */
 .grid-odonto{
     display:grid;
@@ -193,28 +214,34 @@ Cuota {{ e.descripcion.cuota }} - {{ e.descripcion.monto }}
 Historia clínica
 </div>
 
-<div class="row g-2">
+<div class="row mt-2">
 
-<div class="col-md-6">
+<div class="col-md-6 mb-3">
+<div class="card p-3 shadow-sm">
 <small class="text-muted">Enfermedades</small>
-<div class="p-2 border rounded">{{ e.descripcion.get("enfermedades","-") }}</div>
+<div><strong>{{ e.descripcion.get("enfermedades","-") }}</strong></div>
+</div>
 </div>
 
-<div class="col-md-6">
+<div class="col-md-6 mb-3">
+<div class="card p-3 shadow-sm">
 <small class="text-muted">Alergias</small>
-<div class="p-2 border rounded">{{ e.descripcion.get("alergias","-") }}</div>
+<div><strong>{{ e.descripcion.get("alergias","-") }}</strong></div>
+</div>
 </div>
 
-<div class="col-md-6">
+<div class="col-md-6 mb-3">
+<div class="card p-3 shadow-sm">
 <small class="text-muted">Medicamentos</small>
-<div class="p-2 border rounded">{{ e.descripcion.get("medicamentos","-") }}</div>
+<div><strong>{{ e.descripcion.get("medicamentos","-") }}</strong></div>
+</div>
 </div>
 
-<div class="col-md-12">
+<div class="col-md-12 mb-3">
+<div class="card p-3 shadow-sm">
 <small class="text-muted">Observaciones</small>
-<div class="p-2 border rounded">{{ e.descripcion.get("observaciones","-") }}</div>
+<div><strong>{{ e.descripcion.get("observaciones","-") }}</strong></div>
 </div>
-
 </div>
 
 </div>
@@ -223,36 +250,49 @@ Historia clínica
 <!-- ================= ODONTOGRAMA ================= -->
 {% elif e.tipo == "odontograma" and e.descripcion is mapping %}
 
-<div class="grid-odonto mt-2">
+<div class="text-center mt-3">
 
-{% for diente, estado in e.descripcion.items() %}
-
+<!-- SUPERIOR -->
+<div class="fila-dientes mb-2">
+{% for d in [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28] %}
 <div class="diente"
 style="
 background:
-{% if estado == 'ok' %}#22c55e
-{% elif estado == 'caries' %}#ef4444
-{% elif estado == 'conducto' %}#3b82f6
-{% elif estado == 'corona' %}#a855f7
-{% else %}#94a3b8{% endif %};
+{% if e.descripcion.get(d|string) == 'ok' %}#22c55e
+{% elif e.descripcion.get(d|string) == 'caries' %}#ef4444
+{% elif e.descripcion.get(d|string) == 'conducto' %}#3b82f6
+{% elif e.descripcion.get(d|string) == 'corona' %}#a855f7
+{% else %}#e5e7eb{% endif %};
 color:white;
 ">
-{{ diente }}
+{{ d }}
+</div>
+{% endfor %}
 </div>
 
+<hr style="width:60%; margin:auto;">
+
+<!-- INFERIOR -->
+<div class="fila-dientes mt-2">
+{% for d in [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38] %}
+<div class="diente"
+style="
+background:
+{% if e.descripcion.get(d|string) == 'ok' %}#22c55e
+{% elif e.descripcion.get(d|string) == 'caries' %}#ef4444
+{% elif e.descripcion.get(d|string) == 'conducto' %}#3b82f6
+{% elif e.descripcion.get(d|string) == 'corona' %}#a855f7
+{% else %}#e5e7eb{% endif %};
+color:white;
+">
+{{ d }}
+</div>
 {% endfor %}
+</div>
 
 </div>
 
 {% endif %}
-
-</div>
-</div>
-
-{% endfor %}
-
-</div>
-</div>
 
 <!-- ================= ANAMNESIS ================= -->
 <div class="tab-pane fade" id="anamnesis">

@@ -429,8 +429,7 @@ function guardarOdontograma(){
 
         console.log("RESPUESTA:", data)
 
-        if(data && data.status === "ok"){
-            alert("Guardado correctamente ✅")
+if(data && (data.status === "ok" || data.status === true)){            alert("Guardado correctamente ✅")
             location.reload()
         }else{
             alert(data?.msg || "Error inesperado ❌")

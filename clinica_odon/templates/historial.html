@@ -295,15 +295,46 @@ color:white;
 {% endif %}
 
 <!-- ================= ANAMNESIS ================= -->
-<div class="tab-pane fade" id="anamnesis">
-<div class="card p-4">
+{% elif e.tipo == "anamnesis" and e.descripcion is mapping %}
 
-<textarea id="enfermedades" class="form-control mb-2">{{ anamnesis.enfermedades if anamnesis else "" }}</textarea>
-<textarea id="alergias" class="form-control mb-2">{{ anamnesis.alergias if anamnesis else "" }}</textarea>
-<textarea id="medicamentos" class="form-control mb-2">{{ anamnesis.medicamentos if anamnesis else "" }}</textarea>
-<textarea id="observaciones" class="form-control mb-2">{{ anamnesis.observaciones if anamnesis else "" }}</textarea>
+<div class="card border-0 shadow-sm mt-2">
+<div class="card-body">
 
-<button class="btn btn-dark w-100" onclick="guardarClinico()">Guardar</button>
+<div class="fw-semibold text-primary mb-3">
+Historia clínica
+</div>
+
+<div class="row">
+
+<div class="col-md-6 mb-3">
+<div class="card p-3 shadow-sm">
+<small class="text-muted">Enfermedades</small>
+<div><strong>{{ e.descripcion.get("enfermedades","-") }}</strong></div>
+</div>
+</div>
+
+<div class="col-md-6 mb-3">
+<div class="card p-3 shadow-sm">
+<small class="text-muted">Alergias</small>
+<div><strong>{{ e.descripcion.get("alergias","-") }}</strong></div>
+</div>
+</div>
+
+<div class="col-md-6 mb-3">
+<div class="card p-3 shadow-sm">
+<small class="text-muted">Medicamentos</small>
+<div><strong>{{ e.descripcion.get("medicamentos","-") }}</strong></div>
+</div>
+</div>
+
+<div class="col-md-12 mb-3">
+<div class="card p-3 shadow-sm">
+<small class="text-muted">Observaciones</small>
+<div><strong>{{ e.descripcion.get("observaciones","-") }}</strong></div>
+</div>
+</div>
+
+</div>
 
 </div>
 </div>

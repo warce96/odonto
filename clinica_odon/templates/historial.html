@@ -406,8 +406,7 @@ function pintarInicial(){
 
 // ================= GUARDAR =================
 function guardarOdontograma(){
-
-    console.log("ENVIANDO:", dientes)  // 🔥 DEBUG
+    console.log("ENVIANDO:", dientes)
 
     fetch("/guardar_odontograma/{{ cliente.id }}", {
         method: "POST",
@@ -416,14 +415,22 @@ function guardarOdontograma(){
     })
     .then(res => res.json())
     .then(data => {
-        if(data.status !== "ok"){
-            alert(data.msg)
-            return
+
+        console.log("RESPUESTA:", data)
+
+        if(data.status === "ok"){
+            alert("Odontograma guardado correctamente ✅")
+            location.reload()
+        }else{
+            alert(data.msg || "Error al guardar ❌")
         }
-        location.reload()
+
+    })
+    .catch(err => {
+        console.error("ERROR:", err)
+        alert("Error de conexión ❌")
     })
 }
-
 // ================= INIT =================
 initEstados()
 pintarInicial()

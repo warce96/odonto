@@ -1,7 +1,7 @@
 from app import app
 from flask import render_template
 from flask_login import login_required
-from models import Ficha, Cuota
+from models import Ficha, Cuota, Cliente, Pago
 from datetime import date
 from collections import defaultdict
 
@@ -29,27 +29,20 @@ def dashboard():
 
     for c in cuotas:
 
-        if not c or c.estado == "PAGADO":
+        if c.estado == "PAGADO":
             continue
 
         if not c.fecha_vencimiento:
             continue
 
+        # relaciones directas (más limpio)
         if not c.pago or not c.pago.ficha:
             continue
 
-        ficha = c.pago.ficha
+        cliente = c.pago.ficha.cliente
+        tratamiento = c.pago.ficha.descripcion or "Sin descripción"
 
-        # 🔥 VALIDACIÓN CLAVE
-        if not ficha.cliente:
-            continue
-
-        cliente = ficha.cliente.nombre
-
-        # 🔥 PROTECCIÓN SI NO EXISTE COLUMNA descripcion
-        tratamiento = getattr(ficha, "descripcion", None) or "Sin descripción"
-
-        key = (cliente, tratamiento)
+        key = (cliente.nombre, tratamiento)
 
         agrupados[key].append(c)
 
@@ -58,12 +51,14 @@ def dashboard():
 
     for (cliente, tratamiento), lista in agrupados.items():
 
+        # ordenar por fecha
         lista.sort(key=lambda x: x.fecha_vencimiento)
 
-        c = lista[0]
+        c = lista[0]  # 🔥 SOLO LA PRÓXIMA CUOTA
 
         dias = (c.fecha_vencimiento - hoy).days
 
+        # 🔥 lógica correcta
         if dias <= 0:
             estado = "VENCIDO"
         elif dias <= 7:
@@ -76,12 +71,13 @@ def dashboard():
         alertas.append({
             "cliente": cliente,
             "tratamiento": tratamiento,
-            "cuota": f"{c.numero}/{c.pago.cuotas if c.pago else '-'}",
+            "cuota": f"{c.numero}/{c.pago.cuotas}",
             "estado": estado,
             "monto": gs(c.monto),
             "fecha": c.fecha_vencimiento
         })
 
+    # ordenar final
     alertas.sort(key=lambda x: x["fecha"])
 
     return render_template(

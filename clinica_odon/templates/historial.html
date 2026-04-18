@@ -43,8 +43,6 @@
     border-radius:12px;
     box-shadow:0px 4px 12px rgba(0,0,0,0.05);
 }
-
-/* ODONTO */
 .fila-dientes{
     display:flex;
     justify-content:center;
@@ -61,20 +59,29 @@
     justify-content:center;
     font-size:12px;
     font-weight:600;
-    color:white;
+    transition:0.2s;
 }
 
-/* EDICION ODONTO */
+.diente:hover{
+    transform:scale(1.1);
+}
+/* ODONTO */
 .grid-odonto{
     display:grid;
     grid-template-columns: repeat(8,1fr);
     gap:8px;
 }
-.grid-odonto .diente{
-    background:#f1f5f9;
-    color:#000;
-    border:1px solid #cbd5e1;
+.diente{
+    padding:10px;
+    border-radius:8px;
+    text-align:center;
+    font-size:12px;
     cursor:pointer;
+    background:#f1f5f9;
+    border:1px solid #cbd5e1;
+}
+.diente:hover{
+    transform:scale(1.1);
 }
 
 /* LEYENDA */
@@ -108,10 +115,23 @@
 <h3 class="mb-4 titulo-cliente">{{ cliente.nombre }}</h3>
 
 <ul class="nav nav-pills mb-4">
-<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#historial">Historial</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#anamnesis">Historia Clínica</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#odontograma">Odontograma</button></li>
-<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pagos">Cobros</button></li>
+
+<li class="nav-item">
+<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#historial">Historial</button>
+</li>
+
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#anamnesis">Historia Clínica</button>
+</li>
+
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#odontograma">Odontograma</button>
+</li>
+
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#pagos">Cobros</button>
+</li>
+
 </ul>
 
 <div class="tab-content">
@@ -128,14 +148,23 @@
 
 <div class="d-flex justify-content-between mb-2">
 
-<strong>
-{% if e.tipo == "tratamiento" %}🦷 Tratamiento
-{% elif e.tipo == "pago" %}💳 Pago
-{% elif e.tipo == "anamnesis" %}📋 Historia Clínica
-{% elif e.tipo == "odontograma" %}🦷 Odontograma
-{% else %}{{ e.titulo }}
+<div>
+{% if e.tipo == "tratamiento" %}
+<strong>🦷 Tratamiento</strong>
+
+{% elif e.tipo == "pago" %}
+<strong>💳 Pago</strong>
+
+{% elif e.tipo == "anamnesis" %}
+<strong>📋 Historia Clínica</strong>
+
+{% elif e.tipo == "odontograma" %}
+<strong>🦷 Odontograma</strong>
+
+{% else %}
+<strong>{{ e.titulo }}</strong>
 {% endif %}
-</strong>
+</div>
 
 <small class="text-muted">
 {{ e.fecha.strftime("%d/%m/%Y") if e.fecha else "" }}
@@ -143,19 +172,22 @@
 
 </div>
 
-<!-- TRATAMIENTO -->
+<!-- ================= TRATAMIENTO ================= -->
 {% if e.tipo == "tratamiento" %}
-
 <p><b>{{ e.descripcion }}</b></p>
 
+<!-- ================= PAGO ================= -->
 {% elif e.tipo == "pago" %}
 
 <div class="pago-item">
+
 <div class="punto"
-style="background:
+style="
+background:
 {% if e.estado == 'PAGADO' %}#22c55e
 {% elif e.estado == 'VENCIDO' %}#ef4444
-{% else %}#facc15{% endif %}">
+{% else %}#facc15{% endif %}
+">
 </div>
 
 <div>
@@ -169,56 +201,70 @@ Cuota {{ e.descripcion.cuota }} - {{ e.descripcion.monto }}
 
 <small>{{ e.estado }}</small>
 </div>
+
 </div>
 
+<!-- ================= ANAMNESIS ================= -->
 {% elif e.tipo == "anamnesis" and e.descripcion is mapping %}
 
-<div class="row">
+<div class="card border-0 shadow-sm mt-2">
+<div class="card-body">
+
+<div class="fw-semibold text-primary mb-3">
+Historia clínica
+</div>
+
+<div class="row mt-2">
 
 <div class="col-md-6 mb-3">
-<div class="card p-3">
+<div class="card p-3 shadow-sm">
 <small class="text-muted">Enfermedades</small>
-<strong>{{ e.descripcion.get("enfermedades","-") }}</strong>
+<div><strong>{{ e.descripcion.get("enfermedades","-") }}</strong></div>
 </div>
 </div>
 
 <div class="col-md-6 mb-3">
-<div class="card p-3">
+<div class="card p-3 shadow-sm">
 <small class="text-muted">Alergias</small>
-<strong>{{ e.descripcion.get("alergias","-") }}</strong>
+<div><strong>{{ e.descripcion.get("alergias","-") }}</strong></div>
 </div>
 </div>
 
 <div class="col-md-6 mb-3">
-<div class="card p-3">
+<div class="card p-3 shadow-sm">
 <small class="text-muted">Medicamentos</small>
-<strong>{{ e.descripcion.get("medicamentos","-") }}</strong>
+<div><strong>{{ e.descripcion.get("medicamentos","-") }}</strong></div>
 </div>
 </div>
 
 <div class="col-md-12 mb-3">
-<div class="card p-3">
+<div class="card p-3 shadow-sm">
 <small class="text-muted">Observaciones</small>
-<strong>{{ e.descripcion.get("observaciones","-") }}</strong>
+<div><strong>{{ e.descripcion.get("observaciones","-") }}</strong></div>
 </div>
 </div>
 
 </div>
+</div>
 
+<!-- ================= ODONTOGRAMA ================= -->
 {% elif e.tipo == "odontograma" and e.descripcion is mapping %}
 
-<div class="text-center">
+<div class="text-center mt-3">
 
+<!-- SUPERIOR -->
 <div class="fila-dientes mb-2">
 {% for d in [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28] %}
 <div class="diente"
-style="background:
+style="
+background:
 {% if e.descripcion.get(d|string) == 'ok' %}#22c55e
 {% elif e.descripcion.get(d|string) == 'caries' %}#ef4444
 {% elif e.descripcion.get(d|string) == 'conducto' %}#3b82f6
 {% elif e.descripcion.get(d|string) == 'corona' %}#a855f7
 {% else %}#e5e7eb{% endif %};
-color:white;">
+color:white;
+">
 {{ d }}
 </div>
 {% endfor %}
@@ -226,16 +272,19 @@ color:white;">
 
 <hr style="width:60%; margin:auto;">
 
+<!-- INFERIOR -->
 <div class="fila-dientes mt-2">
 {% for d in [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38] %}
 <div class="diente"
-style="background:
+style="
+background:
 {% if e.descripcion.get(d|string) == 'ok' %}#22c55e
 {% elif e.descripcion.get(d|string) == 'caries' %}#ef4444
 {% elif e.descripcion.get(d|string) == 'conducto' %}#3b82f6
 {% elif e.descripcion.get(d|string) == 'corona' %}#a855f7
 {% else %}#e5e7eb{% endif %};
-color:white;">
+color:white;
+">
 {{ d }}
 </div>
 {% endfor %}
@@ -245,30 +294,52 @@ color:white;">
 
 {% endif %}
 
-<!-- LEYENDA -->
-<div id="leyenda" class="leyenda mt-3"></div>
+<!-- ================= ANAMNESIS ================= -->
+{% elif e.tipo == "anamnesis" and e.descripcion is mapping %}
 
-<button class="btn btn-dark mt-3 w-100" onclick="guardarOdontograma()">Guardar</button>
-<button class="btn btn-outline-danger mt-2 w-100" onclick="resetOdonto()">Limpiar</button>
+<div class="card border-0 shadow-sm mt-2">
+<div class="card-body">
+
+<div class="fw-semibold text-primary mb-3">
+Historia clínica
+</div>
+
+<div class="row">
+
+<div class="col-md-6 mb-3">
+<div class="card p-3 shadow-sm">
+<small class="text-muted">Enfermedades</small>
+<div><strong>{{ e.descripcion.get("enfermedades","-") }}</strong></div>
+</div>
+</div>
+
+<div class="col-md-6 mb-3">
+<div class="card p-3 shadow-sm">
+<small class="text-muted">Alergias</small>
+<div><strong>{{ e.descripcion.get("alergias","-") }}</strong></div>
+</div>
+</div>
+
+<div class="col-md-6 mb-3">
+<div class="card p-3 shadow-sm">
+<small class="text-muted">Medicamentos</small>
+<div><strong>{{ e.descripcion.get("medicamentos","-") }}</strong></div>
+</div>
+</div>
+
+<div class="col-md-12 mb-3">
+<div class="card p-3 shadow-sm">
+<small class="text-muted">Observaciones</small>
+<div><strong>{{ e.descripcion.get("observaciones","-") }}</strong></div>
+</div>
+</div>
+
+</div>
 
 </div>
 </div>
 
-<!-- ================= TAB ANAMNESIS ================= -->
-<div class="tab-pane fade" id="anamnesis">
-<div class="card p-4">
-
-<textarea id="enfermedades" class="form-control mb-2">{{ anamnesis.enfermedades if anamnesis else "" }}</textarea>
-<textarea id="alergias" class="form-control mb-2">{{ anamnesis.alergias if anamnesis else "" }}</textarea>
-<textarea id="medicamentos" class="form-control mb-2">{{ anamnesis.medicamentos if anamnesis else "" }}</textarea>
-<textarea id="observaciones" class="form-control mb-2">{{ anamnesis.observaciones if anamnesis else "" }}</textarea>
-
-<button class="btn btn-dark w-100" onclick="guardarClinico()">Guardar</button>
-
-</div>
-</div>
-
-<!-- ================= TAB ODONTO ================= -->
+<!-- ================= ODONTOGRAMA ================= -->
 <div class="tab-pane fade" id="odontograma">
 
 <div class="card p-4 text-center">
@@ -289,7 +360,7 @@ color:white;">
 </div>
 </div>
 
-<!-- ================= TAB PAGOS ================= -->
+<!-- ================= PAGOS ================= -->
 <div class="tab-pane fade" id="pagos">
 
 <div class="timeline">
@@ -321,6 +392,47 @@ color:white;">
 </div>
 
 <script>
+
+let dientes = {{ dientes | tojson | safe }} || {}
+
+let estados = {
+ok:{color:"#22c55e", nombre:"Sano"},
+caries:{color:"#ef4444", nombre:"Caries"},
+conducto:{color:"#3b82f6", nombre:"Endodoncia"},
+corona:{color:"#a855f7", nombre:"Corona"}
+}
+
+function init(){
+let sel = document.getElementById("estadoSelector")
+let ley = document.getElementById("leyenda")
+
+for(let k in estados){
+sel.innerHTML += `<option value="${k}">${estados[k].nombre}</option>`
+ley.innerHTML += `<div><span class="color-box" style="background:${estados[k].color}"></span> ${estados[k].nombre}</div>`
+}
+}
+
+function pintarEventos(){
+document.querySelectorAll(".diente").forEach(el=>{
+let id = el.dataset.id
+
+el.onclick = ()=>{
+let estado = document.getElementById("estadoSelector").value
+dientes[id]=estado
+el.style.background = estados[estado].color
+el.style.color = "#fff"
+}
+})
+}
+
+function resetOdonto(){
+dientes={}
+document.querySelectorAll(".diente").forEach(el=>{
+el.style.background="#f1f5f9"
+el.style.color="#000"
+})
+}
+
 function guardarClinico(){
 fetch("/guardar_clinico/{{ cliente.id }}",{
 method:"POST",
@@ -338,79 +450,13 @@ function guardarOdontograma(){
 fetch("/guardar_odontograma/{{ cliente.id }}",{
 method:"POST",
 headers:{ "Content-Type":"application/json" },
-body: JSON.stringify({})
+body: JSON.stringify(dientes)
 }).then(()=>location.reload())
-}
-
-let dientes = {{ dientes | tojson | safe }} || {}
-
-let estados = {
-    ok:{color:"#22c55e", nombre:"Sano"},
-    caries:{color:"#ef4444", nombre:"Caries"},
-    conducto:{color:"#3b82f6", nombre:"Endodoncia"},
-    corona:{color:"#a855f7", nombre:"Corona"},
-    implante:{color:"#0ea5e9", nombre:"Implante"}
-}
-
-function init(){
-
-    let sel = document.getElementById("estadoSelector")
-    let ley = document.getElementById("leyenda")
-
-    sel.innerHTML=""
-    ley.innerHTML=""
-
-    for(let k in estados){
-        sel.innerHTML += `<option value="${k}">${estados[k].nombre}</option>`
-
-        ley.innerHTML += `
-        <div class="item-leyenda">
-            <div class="color-box" style="background:${estados[k].color}"></div>
-            ${estados[k].nombre}
-        </div>`
-    }
-}
-
-function pintarEventos(){
-
-    document.querySelectorAll(".diente").forEach(el=>{
-        let id = el.dataset.id
-
-        // pintar si ya existe
-        if(dientes[id]){
-            el.style.background = estados[dientes[id]].color
-            el.style.color = "#fff"
-        }
-
-        el.onclick = ()=>{
-            let estado = document.getElementById("estadoSelector").value
-            dientes[id]=estado
-
-            el.style.background = estados[estado].color
-            el.style.color = "#fff"
-        }
-    })
-}
-
-function resetOdonto(){
-    dientes={}
-    document.querySelectorAll(".diente").forEach(el=>{
-        el.style.background="#f1f5f9"
-        el.style.color="#000"
-    })
-}
-
-function guardarOdontograma(){
-    fetch("/guardar_odontograma/{{ cliente.id }}",{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify(dientes)
-    }).then(()=>location.reload())
 }
 
 init()
 pintarEventos()
-    
+
 </script>
 
 {% endblock %}

@@ -53,7 +53,10 @@ def historial(cliente_id):
 
         eventos.append({
             "tipo": "pago",
-            "descripcion": f"Cuota {c.numero} - {gs(c.monto)}",
+            "descripcion": {
+                "cuota": c.numero,
+                "monto": gs(c.monto)
+            },
             "estado": estado,
             "fecha": datetime.combine(c.fecha_vencimiento, datetime.min.time())
         })
@@ -73,27 +76,33 @@ def historial(cliente_id):
         })
 
     # ================= ODONTOGRAMA =================
+    dientes = {}
+
     if odontograma and odontograma.dientes:
         try:
-            dientes_json = json.loads(odontograma.dientes)
+            dientes = json.loads(odontograma.dientes)
         except:
-            dientes_json = {}
+            dientes = {}
 
         eventos.append({
             "tipo": "odontograma",
             "titulo": "Odontograma",
-            "descripcion": dientes_json,
+            "descripcion": dientes,
             "fecha": odontograma.fecha
         })
 
     # ================= ORDEN =================
     eventos.sort(key=lambda x: x["fecha"], reverse=True)
 
+    # 🎨 COLORES (podés expandir o hacer dinámico después)
     colores = {
         "ok": "#22c55e",
         "caries": "#ef4444",
         "conducto": "#3b82f6",
-        "corona": "#a855f7"
+        "corona": "#a855f7",
+        "implante": "#0ea5e9",
+        "extraccion": "#991b1b",
+        "ausente": "#374151"
     }
 
     return render_template(
@@ -102,6 +111,6 @@ def historial(cliente_id):
         eventos=eventos,
         cuotas=cuotas,
         anamnesis=anamnesis,
-        dientes={},
+        dientes=dientes,   # 🔥 FIX CLAVE
         colores=colores
     )

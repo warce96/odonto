@@ -59,21 +59,7 @@ def guardar_odontograma(cliente_id):
 
     return {"ok": True}
 
-@app.route("/crear_estado_odonto", methods=["POST"])
-@login_required
-def crear_estado_odonto():
 
-    data = request.get_json()
-
-    estado = EstadoOdonto(
-        nombre=data.get("nombre"),
-        color=data.get("color")
-    )
-
-    db.session.add(estado)
-    db.session.commit()
-
-    return jsonify({"ok":True})
 # ================= RUTAS =================
 from routes.auth import *
 from routes.dashboard import *

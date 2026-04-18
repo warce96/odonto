@@ -1,13 +1,13 @@
 from app import app
 from flask import render_template
 from flask_login import login_required
-from models import Cliente, Ficha, Cuota, Anamnesis, Odontograma, Pago, EstadoOdonto
+from models import Cliente, Ficha, Cuota, Anamnesis, Odontograma, Pago
 from datetime import datetime
 import json
 
 
 def gs(valor):
-    return "₲ {:,.0f}".format(valor or 0).replace(",", ".")
+    return "₲ {:,.0f}".format(valor).replace(",", ".")
 
 
 @app.route("/historial/<int:cliente_id>")
@@ -38,8 +38,8 @@ def historial(cliente_id):
         eventos.append({
             "tipo": "tratamiento",
             "titulo": "Tratamiento",
-            "descripcion": f.descripcion if hasattr(f, "descripcion") and f.descripcion else f"Monto: {gs(f.total)}",
-            "fecha": f.fecha or datetime.now()
+            "descripcion": getattr(f, "descripcion", f"Monto: {gs(f.total)}"),
+            "fecha": f.fecha
         })
 
     # ================= PAGOS =================
@@ -48,20 +48,14 @@ def historial(cliente_id):
         if c.estado == "PAGADO":
             estado = "PAGADO"
         else:
-            if c.fecha_vencimiento:
-                dias = (c.fecha_vencimiento - hoy.date()).days
-                estado = "VENCIDO" if dias <= 0 else "PENDIENTE"
-            else:
-                estado = "PENDIENTE"
+            dias = (c.fecha_vencimiento - hoy.date()).days
+            estado = "VENCIDO" if dias < 0 else "PENDIENTE"
 
         eventos.append({
             "tipo": "pago",
-            "descripcion": {
-                "cuota": c.numero,
-                "monto": gs(c.monto)
-            },
+            "descripcion": f"Cuota {c.numero} - {gs(c.monto)}",
             "estado": estado,
-            "fecha": datetime.combine(c.fecha_vencimiento, datetime.min.time()) if c.fecha_vencimiento else datetime.now()
+            "fecha": datetime.combine(c.fecha_vencimiento, datetime.min.time())
         })
 
     # ================= ANAMNESIS =================
@@ -70,39 +64,32 @@ def historial(cliente_id):
             "tipo": "anamnesis",
             "titulo": "Historia clínica",
             "descripcion": {
-                "enfermedades": anamnesis.enfermedades or "",
-                "alergias": anamnesis.alergias or "",
-                "medicamentos": anamnesis.medicamentos or "",
-                "observaciones": anamnesis.observaciones or ""
+                "enfermedades": anamnesis.enfermedades,
+                "alergias": anamnesis.alergias,
+                "medicamentos": anamnesis.medicamentos,
+                "observaciones": anamnesis.observaciones
             },
-            "fecha": anamnesis.fecha or datetime.now()
+            "fecha": anamnesis.fecha
         })
 
     # ================= ODONTOGRAMA =================
-    dientes = {}
-
     if odontograma and odontograma.dientes:
         try:
-            dientes = json.loads(odontograma.dientes)
-        except Exception as e:
-            print("ERROR leyendo odontograma:", e)
-            dientes = {}
+            dientes_json = json.loads(odontograma.dientes)
+        except:
+            dientes_json = {}
 
         eventos.append({
             "tipo": "odontograma",
             "titulo": "Odontograma",
-            "descripcion": dientes,
-            "fecha": odontograma.fecha or datetime.now()
+            "descripcion": dientes_json,
+            "fecha": odontograma.fecha
         })
 
     # ================= ORDEN =================
-    eventos.sort(key=lambda x: x.get("fecha") or datetime.now(), reverse=True)
+    eventos.sort(key=lambda x: x["fecha"], reverse=True)
 
-    # ================= ESTADOS DINÁMICOS =================
-    estados = EstadoOdonto.query.all()
-
-    # ================= COLORES BASE =================
-colores = {
+    colores = {
     "ok": "#22c55e",           # Verde → sano
     "caries": "#ef4444",       # Rojo → caries
     "conducto": "#3b82f6",     # Azul → endodoncia
@@ -124,7 +111,6 @@ colores = {
         eventos=eventos,
         cuotas=cuotas,
         anamnesis=anamnesis,
-        dientes=dientes,
-        colores=colores,
-        estados=estados
+        dientes={},
+        colores=colores
     )

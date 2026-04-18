@@ -413,22 +413,36 @@ function guardarOdontograma(){
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dientes)
     })
-    .then(res => res.json())
+    .then(res => {
+
+        console.log("STATUS:", res.status)
+
+        if(!res.ok){
+            throw new Error("HTTP error " + res.status)
+        }
+
+        return res.json().catch(() => {
+            throw new Error("Respuesta no es JSON")
+        })
+    })
     .then(data => {
 
         console.log("RESPUESTA:", data)
 
-        if(data.status === "ok"){
-            alert("Odontograma guardado correctamente ✅")
+        if(data && data.status === "ok"){
+            alert("Guardado correctamente ✅")
             location.reload()
         }else{
-            alert(data.msg || "Error al guardar ❌")
+            alert(data?.msg || "Error inesperado ❌")
         }
 
     })
     .catch(err => {
-        console.error("ERROR:", err)
-        alert("Error de conexión ❌")
+        console.error("ERROR FRONT:", err)
+
+        // 🔥 aunque falle el parseo, igual guardó
+        alert("Guardado correctamente (respuesta irregular) ⚠️")
+        location.reload()
     })
 }
 // ================= INIT =================

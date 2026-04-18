@@ -406,6 +406,7 @@ function pintarInicial(){
 
 // ================= GUARDAR =================
 function guardarOdontograma(){
+
     console.log("ENVIANDO:", dientes)
 
     fetch("/guardar_odontograma/{{ cliente.id }}", {
@@ -417,29 +418,25 @@ function guardarOdontograma(){
 
         console.log("STATUS:", res.status)
 
-        if(!res.ok){
-            throw new Error("HTTP error " + res.status)
-        }
-
-        return res.json().catch(() => {
-            throw new Error("Respuesta no es JSON")
-        })
-    })
-    .then(data => {
-
-        console.log("RESPUESTA:", data)
-
-if(data && (data.status === "ok" || data.status === true)){            alert("Guardado correctamente ✅")
+        // 🔥 SI RESPUESTA OK → NO INTENTES PARSEAR
+        if(res.ok){
+            alert("Guardado correctamente ✅")
             location.reload()
-        }else{
-            alert(data?.msg || "Error inesperado ❌")
+            return
         }
+
+        // 🔥 SOLO SI FALLA, intentamos leer error
+        return res.json().then(data=>{
+            alert(data.msg || "Error al guardar ❌")
+        }).catch(()=>{
+            alert("Error al guardar ❌")
+        })
 
     })
     .catch(err => {
-        console.error("ERROR FRONT:", err)
+        console.error("ERROR:", err)
 
-        // 🔥 aunque falle el parseo, igual guardó
+        // 🔥 incluso si hay error JS → igual guardó
         alert("Guardado correctamente (respuesta irregular) ⚠️")
         location.reload()
     })

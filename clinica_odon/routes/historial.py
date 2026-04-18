@@ -1,6 +1,6 @@
 from app import app
-from flask import render_template
-from flask_login import login_required
+from flask import render_template,Flask
+from flask_login import LoginManager, login_required
 from models import Cliente, Ficha, Cuota, Anamnesis, Odontograma, Pago
 from datetime import datetime
 import json

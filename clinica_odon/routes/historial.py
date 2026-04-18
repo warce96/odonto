@@ -4,7 +4,9 @@ from flask_login import login_required
 from models import Cliente, Ficha, Cuota, Anamnesis, Odontograma, Pago
 from datetime import datetime
 import json
+from models import EstadoOdonto
 
+estados = EstadoOdonto.query.all()
 
 def gs(valor):
     return "₲ {:,.0f}".format(valor).replace(",", ".")

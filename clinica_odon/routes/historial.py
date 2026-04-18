@@ -102,13 +102,21 @@ def historial(cliente_id):
     estados = EstadoOdonto.query.all()
 
     # ================= COLORES BASE =================
-    colores = {
-        "ok": "#22c55e",
-        "caries": "#ef4444",
-        "conducto": "#3b82f6",
-        "corona": "#a855f7",
-        "implante": "#0ea5e9"
-    }
+colores = {
+    "ok": "#22c55e",           # Verde → sano
+    "caries": "#ef4444",       # Rojo → caries
+    "conducto": "#3b82f6",     # Azul → endodoncia
+    "corona": "#a855f7",       # Violeta → corona
+    "implante": "#0ea5e9",     # Celeste → implante
+    "extraccion": "#111827",   # Negro → extracción
+    "ausente": "#9ca3af",      # Gris → diente ausente
+    "protesis": "#f59e0b",     # Naranja → prótesis
+    "sellado": "#14b8a6",      # Verde agua → sellado
+    "fractura": "#b91c1c",     # Rojo oscuro → fractura
+    "movilidad": "#eab308",    # Amarillo → movilidad
+    "ortodoncia": "#ec4899",   # Rosa → brackets
+    "resina": "#6366f1"        # 🔥 Restauración con resina (nuevo)
+}
 
     return render_template(
         "historial.html",

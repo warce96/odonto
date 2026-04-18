@@ -11,10 +11,10 @@ from datetime import datetime
 def guardar_odontograma(cliente_id):
 
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
 
-        # ===== VALIDACIÓN =====
-        if not data or len(data) == 0:
+        # ===== VALIDACIÓN SEGURA =====
+        if not isinstance(data, dict) or len(data) == 0:
             return jsonify({
                 "status": "error",
                 "msg": "No hay dientes seleccionados"
@@ -33,7 +33,7 @@ def guardar_odontograma(cliente_id):
         # ===== EVENTO PARA HISTORIAL =====
         evento = EventoClinico(
             cliente_id=cliente_id,
-            tipo="odontograma",   # 🔥 IMPORTANTE (coincide con historial.html)
+            tipo="odontograma",
             titulo="Actualización odontológica",
             descripcion=json.dumps(data),
             fecha=datetime.now()
@@ -41,10 +41,8 @@ def guardar_odontograma(cliente_id):
 
         db.session.add(evento)
 
-        # ===== COMMIT FINAL =====
         db.session.commit()
 
-        # ===== DEBUG (opcional, podés borrar después) =====
         print("ODONTOGRAMA GUARDADO:", data)
 
         return jsonify({"status": "ok"})

@@ -387,13 +387,17 @@ function pintarInicial(){
 }
 
 function guardarOdontograma(){
+    console.log("ENVIANDO:", dientes)  // 🔥 DEBUG
+
     fetch("/guardar_odontograma/{{ cliente.id }}",{
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify(dientes)
-    }).then(res=>{
-        if(!res.ok){
-            alert("No seleccionaste dientes")
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.status !== "ok"){
+            alert(data.msg)
             return
         }
         location.reload()

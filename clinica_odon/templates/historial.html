@@ -391,7 +391,13 @@ function guardarOdontograma(){
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify(dientes)
-    }).then(()=> location.reload())
+    }).then(res => {
+        if(!res.ok){
+            alert("Error al guardar odontograma")
+            return
+        }
+        location.reload()
+    })
 }
 
 initEstados()

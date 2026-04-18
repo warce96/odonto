@@ -159,42 +159,48 @@ document.getElementById("tipo").addEventListener("change", function(){
 })
 
 // ================= SIMULACIÓN =================
+
 document.addEventListener("input", function(){
 
     if(document.getElementById("tipo").value !== "cuotas") return
 
-    let total = parseFloat(document.getElementById("total").value.replace(/\./g,'')) || 0
+    let total = parseFloat(
+        document.getElementById("total").value.replace(/\./g,'')
+    ) || 0
+
     let interes = parseFloat(document.getElementById("interes").value) || 0
     let cuotas = parseInt(document.getElementById("cuotas").value) || 1
-    let periodo = parseInt(document.getElementById("periodo").value) || 30
 
     let fechaInicio = document.getElementById("fecha_inicio").value
-    let fechaBase = fechaInicio ? new Date(fechaInicio) : new Date()
+
+    // 🔥 FIX TIMEZONE (CLAVE)
+    let fechaBase = fechaInicio 
+        ? new Date(fechaInicio + "T00:00:00")
+        : new Date()
 
     let totalFinal = total * (1 + interes/100)
     let monto = totalFinal / cuotas
 
     let html = ""
 
-for(let i=0;i<cuotas;i++){
+    for(let i = 0; i < cuotas; i++){
 
-    let fecha = new Date(fechaBase)
+        let fecha = new Date(fechaBase)
 
-    // 👇 clave: la primera cuota usa fecha base
-    fecha.setDate(fecha.getDate() + (periodo*i))
+        // 🔥 SUMA MESES REALES (NO 30 DÍAS)
+        fecha.setMonth(fecha.getMonth() + i)
 
-    html += `
-    <div class="d-flex justify-content-between border-bottom py-2">
-        <div>Cuota ${i+1}</div>
-        <div><b>${formato(monto)}</b></div>
-        <div>${fecha.toLocaleDateString()}</div>
-    </div>`
-}
+        html += `
+        <div class="d-flex justify-content-between border-bottom py-2">
+            <div>Cuota ${i+1}</div>
+            <div><b>${formato(monto)}</b></div>
+            <div>${fecha.toLocaleDateString("es-PY")}</div>
+        </div>`
+    }
 
     document.getElementById("simulacion").innerHTML = html
 
 })
-
 </script>
 
 {% endblock %}

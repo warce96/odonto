@@ -331,7 +331,7 @@ Guardar Odontograma
 
 <script>
 
-// ANAMNESIS
+// ================= ANAMNESIS =================
 function guardarClinico(){
     fetch("/guardar_clinico/{{ cliente.id }}",{
         method:"POST",
@@ -345,7 +345,7 @@ function guardarClinico(){
     }).then(()=> location.reload())
 }
 
-// ODONTOGRAMA PRO
+// ================= ODONTOGRAMA =================
 let dientes = {{ dientes | tojson | safe }} || {}
 
 let estados = {}
@@ -357,6 +357,7 @@ estados["{{ key }}"] = {
 }
 {% endfor %}
 
+// ================= INIT SELECT + LEYENDA =================
 function initEstados(){
     let sel = document.getElementById("estadoSelector")
     let ley = document.getElementById("leyenda")
@@ -375,31 +376,42 @@ function initEstados(){
     }
 }
 
+// ================= CLICK EN DIENTE =================
 function pintar(el){
     let estado = document.getElementById("estadoSelector").value
     let id = el.dataset.id
 
-    dientes[id]=estado
+    console.log("CLICK:", id, estado)  // 🔥 DEBUG
+
+    dientes[id] = estado
+
     el.style.background = estados[estado].color
-    el.style.color="white"
+    el.style.color = "white"
 }
 
+// ================= PINTAR GUARDADOS =================
 function pintarInicial(){
     document.querySelectorAll(".diente").forEach(el=>{
         let id = el.dataset.id
+
         if(dientes[id]){
             el.style.background = estados[dientes[id]].color
-            el.style.color="white"
+            el.style.color = "white"
         }
+
+        // 🔥 AQUÍ ESTABA EL PROBLEMA
+        el.onclick = () => pintar(el)
     })
 }
 
+// ================= GUARDAR =================
 function guardarOdontograma(){
+
     console.log("ENVIANDO:", dientes)  // 🔥 DEBUG
 
-    fetch("/guardar_odontograma/{{ cliente.id }}",{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
+    fetch("/guardar_odontograma/{{ cliente.id }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dientes)
     })
     .then(res => res.json())
@@ -411,6 +423,8 @@ function guardarOdontograma(){
         location.reload()
     })
 }
+
+// ================= INIT =================
 initEstados()
 pintarInicial()
 

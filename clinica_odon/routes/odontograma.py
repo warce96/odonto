@@ -11,16 +11,28 @@ from datetime import datetime
 def guardar_odontograma(cliente_id):
 
     try:
-        data = request.get_json(silent=True) or {}
+        data = request.get_json(silent=True)
 
-        # ===== VALIDACIÓN SEGURA =====
-        if not isinstance(data, dict) or len(data) == 0:
+        print("DATA RECIBIDA:", data)  # 🔥 DEBUG
+
+        # 🔥 validar SOLO si es None
+        if data is None:
             return jsonify({
                 "status": "error",
-                "msg": "No hay dientes seleccionados"
+                "msg": "Datos inválidos"
             }), 400
 
-        # ===== GUARDAR ODONTOGRAMA =====
+        # 🔥 asegurar formato correcto
+        if not isinstance(data, dict):
+            return jsonify({
+                "status": "error",
+                "msg": "Formato incorrecto"
+            }), 400
+
+        # 🔥 normalizar claves y valores
+        data = {str(k): str(v) for k, v in data.items()}
+
+        # ===== GUARDAR =====
         odontograma = Odontograma.query.filter_by(cliente_id=cliente_id).first()
 
         if not odontograma:
@@ -30,7 +42,7 @@ def guardar_odontograma(cliente_id):
 
         db.session.add(odontograma)
 
-        # ===== EVENTO PARA HISTORIAL =====
+        # ===== EVENTO =====
         evento = EventoClinico(
             cliente_id=cliente_id,
             tipo="odontograma",
@@ -45,7 +57,10 @@ def guardar_odontograma(cliente_id):
 
         print("ODONTOGRAMA GUARDADO:", data)
 
-        return jsonify({"status": "ok"})
+        return jsonify({
+            "status": "ok",
+            "msg": "Guardado correctamente"
+        })
 
     except Exception as e:
         print("ERROR GUARDAR ODONTOGRAMA:", e)

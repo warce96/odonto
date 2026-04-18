@@ -1,13 +1,14 @@
 from app import app
-from flask import render_template,Flask
-from flask_login import LoginManager, login_required
-from models import Cliente, Ficha, Cuota, Anamnesis, Odontograma, Pago
+from flask import render_template
+from flask_login import login_required
+from models import Cliente, Ficha, Cuota, Anamnesis, Odontograma, Pago, EstadoOdonto
 from datetime import datetime
 import json
-from models import EstadoOdonto
+
 
 def gs(valor):
-    return "₲ {:,.0f}".format(valor).replace(",", ".")
+    return "₲ {:,.0f}".format(valor or 0).replace(",", ".")
+
 
 @app.route("/historial/<int:cliente_id>")
 @login_required
@@ -37,8 +38,8 @@ def historial(cliente_id):
         eventos.append({
             "tipo": "tratamiento",
             "titulo": "Tratamiento",
-            "descripcion": getattr(f, "descripcion", f"Monto: {gs(f.total)}"),
-            "fecha": f.fecha or datetime.now()  # 🔥 FIX
+            "descripcion": f.descripcion if hasattr(f, "descripcion") and f.descripcion else f"Monto: {gs(f.total)}",
+            "fecha": f.fecha or datetime.now()
         })
 
     # ================= PAGOS =================
@@ -47,8 +48,11 @@ def historial(cliente_id):
         if c.estado == "PAGADO":
             estado = "PAGADO"
         else:
-            dias = (c.fecha_vencimiento - hoy.date()).days if c.fecha_vencimiento else 0
-            estado = "VENCIDO" if dias <= 0 else "PENDIENTE"
+            if c.fecha_vencimiento:
+                dias = (c.fecha_vencimiento - hoy.date()).days
+                estado = "VENCIDO" if dias <= 0 else "PENDIENTE"
+            else:
+                estado = "PENDIENTE"
 
         eventos.append({
             "tipo": "pago",
@@ -80,7 +84,8 @@ def historial(cliente_id):
     if odontograma and odontograma.dientes:
         try:
             dientes = json.loads(odontograma.dientes)
-        except:
+        except Exception as e:
+            print("ERROR leyendo odontograma:", e)
             dientes = {}
 
         eventos.append({
@@ -93,7 +98,18 @@ def historial(cliente_id):
     # ================= ORDEN =================
     eventos.sort(key=lambda x: x.get("fecha") or datetime.now(), reverse=True)
 
+    # ================= ESTADOS DINÁMICOS =================
     estados = EstadoOdonto.query.all()
+
+    # ================= COLORES BASE =================
+    colores = {
+        "ok": "#22c55e",
+        "caries": "#ef4444",
+        "conducto": "#3b82f6",
+        "corona": "#a855f7",
+        "implante": "#0ea5e9"
+    }
+
     return render_template(
         "historial.html",
         cliente=cliente,

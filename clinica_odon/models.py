@@ -120,3 +120,10 @@ class EventoClinico(db.Model):
     titulo = db.Column(db.String(100))
     descripcion = db.Column(db.Text)  # JSON
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
+# ================= ODONTOGRAMA ESTADOS  =================
+class EstadoOdontograma(db.Model):
+    __tablename__ = "estado_odontograma"
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(50))
+    color = db.Column(db.String(20))

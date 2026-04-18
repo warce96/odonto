@@ -145,10 +145,11 @@
 
 <!-- TRATAMIENTO -->
 {% if e.tipo == "tratamiento" %}
+
 <p><b>{{ e.descripcion }}</b></p>
 
-<!-- PAGO -->
 {% elif e.tipo == "pago" %}
+
 <div class="pago-item">
 <div class="punto"
 style="background:
@@ -165,11 +166,11 @@ Cuota {{ e.descripcion.cuota }} - {{ e.descripcion.monto }}
 {{ e.descripcion }}
 {% endif %}
 </b><br>
+
 <small>{{ e.estado }}</small>
 </div>
 </div>
 
-<!-- ANAMNESIS -->
 {% elif e.tipo == "anamnesis" and e.descripcion is mapping %}
 
 <div class="row">
@@ -203,33 +204,46 @@ Cuota {{ e.descripcion.cuota }} - {{ e.descripcion.monto }}
 </div>
 
 </div>
-{% endfor %}
-<!-- ODONTO -->
+
 {% elif e.tipo == "odontograma" and e.descripcion is mapping %}
 
-<div class="tab-pane fade" id="odontograma">
+<div class="text-center">
 
-<div class="card p-4 text-center">
-
-<h5 class="mb-3">Odontograma Clínico</h5>
-
-<select id="estadoSelector" class="form-select mb-3"></select>
-
-<!-- FILA SUPERIOR -->
 <div class="fila-dientes mb-2">
 {% for d in [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28] %}
-<div class="diente" data-id="{{ d }}">{{ d }}</div>
+<div class="diente"
+style="background:
+{% if e.descripcion.get(d|string) == 'ok' %}#22c55e
+{% elif e.descripcion.get(d|string) == 'caries' %}#ef4444
+{% elif e.descripcion.get(d|string) == 'conducto' %}#3b82f6
+{% elif e.descripcion.get(d|string) == 'corona' %}#a855f7
+{% else %}#e5e7eb{% endif %};
+color:white;">
+{{ d }}
+</div>
 {% endfor %}
 </div>
 
 <hr style="width:60%; margin:auto;">
 
-<!-- FILA INFERIOR -->
 <div class="fila-dientes mt-2">
 {% for d in [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38] %}
-<div class="diente" data-id="{{ d }}">{{ d }}</div>
+<div class="diente"
+style="background:
+{% if e.descripcion.get(d|string) == 'ok' %}#22c55e
+{% elif e.descripcion.get(d|string) == 'caries' %}#ef4444
+{% elif e.descripcion.get(d|string) == 'conducto' %}#3b82f6
+{% elif e.descripcion.get(d|string) == 'corona' %}#a855f7
+{% else %}#e5e7eb{% endif %};
+color:white;">
+{{ d }}
+</div>
 {% endfor %}
 </div>
+
+</div>
+
+{% endif %}
 
 <!-- LEYENDA -->
 <div id="leyenda" class="leyenda mt-3"></div>

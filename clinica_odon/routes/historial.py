@@ -39,7 +39,7 @@ def historial(cliente_id):
             "tipo": "tratamiento",
             "titulo": "Tratamiento",
             "descripcion": getattr(f, "descripcion", f"Monto: {gs(f.total)}"),
-            "fecha": f.fecha
+            "fecha": f.fecha or datetime.now()  # 🔥 FIX
         })
 
     # ================= PAGOS =================
@@ -48,8 +48,8 @@ def historial(cliente_id):
         if c.estado == "PAGADO":
             estado = "PAGADO"
         else:
-            dias = (c.fecha_vencimiento - hoy.date()).days
-            estado = "VENCIDO" if dias < 0 else "PENDIENTE"
+            dias = (c.fecha_vencimiento - hoy.date()).days if c.fecha_vencimiento else 0
+            estado = "VENCIDO" if dias <= 0 else "PENDIENTE"
 
         eventos.append({
             "tipo": "pago",
@@ -58,7 +58,7 @@ def historial(cliente_id):
                 "monto": gs(c.monto)
             },
             "estado": estado,
-            "fecha": datetime.combine(c.fecha_vencimiento, datetime.min.time())
+            "fecha": datetime.combine(c.fecha_vencimiento, datetime.min.time()) if c.fecha_vencimiento else datetime.now()
         })
 
     # ================= ANAMNESIS =================
@@ -67,12 +67,12 @@ def historial(cliente_id):
             "tipo": "anamnesis",
             "titulo": "Historia clínica",
             "descripcion": {
-                "enfermedades": anamnesis.enfermedades,
-                "alergias": anamnesis.alergias,
-                "medicamentos": anamnesis.medicamentos,
-                "observaciones": anamnesis.observaciones
+                "enfermedades": anamnesis.enfermedades or "",
+                "alergias": anamnesis.alergias or "",
+                "medicamentos": anamnesis.medicamentos or "",
+                "observaciones": anamnesis.observaciones or ""
             },
-            "fecha": anamnesis.fecha
+            "fecha": anamnesis.fecha or datetime.now()
         })
 
     # ================= ODONTOGRAMA =================
@@ -88,13 +88,12 @@ def historial(cliente_id):
             "tipo": "odontograma",
             "titulo": "Odontograma",
             "descripcion": dientes,
-            "fecha": odontograma.fecha
+            "fecha": odontograma.fecha or datetime.now()
         })
 
     # ================= ORDEN =================
-    eventos.sort(key=lambda x: x["fecha"], reverse=True)
+    eventos.sort(key=lambda x: x.get("fecha") or datetime.now(), reverse=True)
 
-    # 🎨 COLORES (podés expandir o hacer dinámico después)
     colores = {
         "ok": "#22c55e",
         "caries": "#ef4444",
@@ -111,6 +110,6 @@ def historial(cliente_id):
         eventos=eventos,
         cuotas=cuotas,
         anamnesis=anamnesis,
-        dientes=dientes,   # 🔥 FIX CLAVE
+        dientes=dientes,
         colores=colores
     )

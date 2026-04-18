@@ -94,16 +94,7 @@ def historial(cliente_id):
     # ================= ORDEN =================
     eventos.sort(key=lambda x: x.get("fecha") or datetime.now(), reverse=True)
 
-    colores = {
-        "ok": "#22c55e",
-        "caries": "#ef4444",
-        "conducto": "#3b82f6",
-        "corona": "#a855f7",
-        "implante": "#0ea5e9",
-        "extraccion": "#991b1b",
-        "ausente": "#374151"
-    }
-
+    estados = EstadoOdonto.query.all()
     return render_template(
         "historial.html",
         cliente=cliente,

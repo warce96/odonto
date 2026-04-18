@@ -262,8 +262,11 @@ Guardar Historia Clínica
 
 <h6 class="mb-3 text-muted">Odontograma Clínico</h6>
 
- <select id="estadoSelector" class="form-select mb-3"></select> 
-
+<select id="estadoSelector" class="form-select mb-3">
+    {% for key, color in colores.items() %}
+        <option value="{{ key }}">{{ key|capitalize }}</option>
+    {% endfor %}
+</select>
     
 <div class="fila-dientes">
 {% for d in [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28] %}
@@ -347,23 +350,13 @@ let dientes = {{ dientes | tojson | safe }} || {}
 
 let estados = {}
 
-document.querySelectorAll("#estadoSelector option").forEach(opt=>{
-    estados[opt.value] = {
-        nombre: opt.value,
-        color: opt.dataset.color
-    }
-})
-function crearEstado(){
-
-    fetch("/crear_estado_odonto",{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({
-            nombre: nuevoNombre.value,
-            color: nuevoColor.value
-        })
-    }).then(()=>location.reload())
+{% for key, color in colores.items() %}
+estados["{{ key }}"] = {
+    color: "{{ color }}",
+    nombre: "{{ key }}"
 }
+{% endfor %}
+
 function initEstados(){
     let sel = document.getElementById("estadoSelector")
     let ley = document.getElementById("leyenda")

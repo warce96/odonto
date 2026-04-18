@@ -391,15 +391,14 @@ function guardarOdontograma(){
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify(dientes)
-    }).then(res => {
+    }).then(res=>{
         if(!res.ok){
-            alert("Error al guardar odontograma")
+            alert("No seleccionaste dientes")
             return
         }
         location.reload()
     })
 }
-
 initEstados()
 pintarInicial()
 

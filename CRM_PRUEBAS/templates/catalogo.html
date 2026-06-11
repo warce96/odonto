@@ -1,0 +1,521 @@
+{% extends "base.html" %}
+
+{% block title %}Catálogo | {{ APP_NAME }}{% endblock %}
+{% block page_title %}Catálogo de productos{% endblock %}
+{% block page_description %}Productos Essen y Tupi disponibles para cotizar y registrar como venta.{% endblock %}
+
+{% block content %}
+
+<!-- Filtros -->
+<section class="panel mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Buscar</label>
+            <input class="form-control" type="text" name="q" id="catalogSearch" value="{{ busqueda }}" placeholder="Nombre, línea, descripción…">
+        </div>
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Marca</label>
+            <select class="form-select" name="marca" onchange="this.form.submit()">
+                <option value="">Todas</option>
+                {% for m in marcas %}
+                    <option value="{{ m }}" {% if marca_filtro == m %}selected{% endif %}>{{ m }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Categoría</label>
+            <select class="form-select" name="categoria" onchange="this.form.submit()">
+                <option value="">Todas</option>
+                {% for c in categorias %}
+                    <option value="{{ c }}" {% if categoria_filtro == c %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Línea</label>
+            <select class="form-select" name="linea" onchange="this.form.submit()">
+                <option value="">Todas las líneas</option>
+                {% if marca_filtro %}
+                    {% for l in lineas[marca_filtro] %}
+                        <option value="{{ l }}" {% if linea_filtro == l %}selected{% endif %}>{{ l }}</option>
+                    {% endfor %}
+                {% else %}
+                    {% for marca_key, lineas_lista in lineas.items() %}
+                        <optgroup label="{{ marca_key }}">
+                            {% for l in lineas_lista %}
+                                <option value="{{ l }}" {% if linea_filtro == l %}selected{% endif %}>{{ l }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    {% endfor %}
+                {% endif %}
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary flex-fill" type="submit">
+                    <i class="bi bi-search me-1"></i>Buscar
+                </button>
+                <a href="{{ url_for('catalogo') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+</section>
+
+<!-- Header resultados -->
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+        <span class="badge-soft-primary me-2">{{ total }} productos</span>
+        {% if marca_filtro %}<span class="badge-soft-success me-1">{{ marca_filtro }}</span>{% endif %}
+        {% if categoria_filtro %}<span class="badge-soft-warning me-1">{{ categoria_filtro }}</span>{% endif %}
+        {% if linea_filtro %}<span class="badge-soft-primary me-1">{{ linea_filtro }}</span>{% endif %}
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm" onclick="setView('grid')" id="btnGrid">
+            <i class="bi bi-grid-3x3-gap"></i>
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="setView('list')" id="btnList">
+            <i class="bi bi-list-ul"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Tabs por marca -->
+<ul class="nav nav-pills mb-4 gap-2" id="marcaTabs">
+    <li class="nav-item">
+        <a class="nav-link {% if not marca_filtro %}active{% endif %}"
+           href="{{ url_for('catalogo', categoria=categoria_filtro, linea=linea_filtro, q=busqueda) }}">
+            Todas las marcas
+        </a>
+    </li>
+    {% for m in marcas %}
+    <li class="nav-item">
+        <a class="nav-link marca-tab marca-{{ m|lower }} {% if marca_filtro == m %}active{% endif %}"
+           href="{{ url_for('catalogo', marca=m, categoria=categoria_filtro, linea=linea_filtro, q=busqueda) }}">
+            {% if m == 'Essen' %}<i class="bi bi-fire me-1"></i>{% else %}<i class="bi bi-shop me-1"></i>{% endif %}
+            {{ m }}
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+
+<!-- Grid de productos -->
+{% if productos %}
+<div id="productosGrid" class="catalogo-grid">
+    {% for p in productos %}
+    <div class="catalogo-card" data-marca="{{ p.marca }}" data-id="{{ p.id }}">
+        <!-- Imagen -->
+        <div class="catalogo-img-wrap">
+            <img src="{{ p.imagen }}"
+                 alt="{{ p.nombre }}"
+                 class="catalogo-img"
+                 loading="lazy"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='grid'">
+            <div class="catalogo-img-placeholder" style="display:none">
+                {% if p.tipo in ['Lavarropas'] %}<i class="bi bi-droplet-half fs-1"></i>
+                {% elif p.tipo in ['Secarropas'] %}<i class="bi bi-wind fs-1"></i>
+                {% elif p.tipo in ['Televisor'] %}<i class="bi bi-tv fs-1"></i>
+                {% elif p.tipo in ['Air Fryer','Horno','Cafetera','Placa'] %}<i class="bi bi-plug fs-1"></i>
+                {% elif p.tipo in ['Sartén'] %}<i class="bi bi-circle fs-1"></i>
+                {% elif p.tipo in ['Flip'] %}<i class="bi bi-arrow-repeat fs-1"></i>
+                {% else %}<i class="bi bi-egg-fried fs-1"></i>{% endif %}
+            </div>
+            <div class="catalogo-marca-badge marca-badge-{{ p.marca|lower }}">{{ p.marca }}</div>
+        </div>
+
+        <!-- Info -->
+        <div class="catalogo-body">
+            <div class="catalogo-linea">{{ p.linea }}</div>
+            <h3 class="catalogo-nombre">{{ p.nombre }}</h3>
+            <p class="catalogo-desc">{{ p.descripcion }}</p>
+
+            <div class="catalogo-meta">
+                {% if p.comensales and p.comensales != '—' %}
+                <span class="catalogo-meta-item">
+                    <i class="bi bi-people"></i> {{ p.comensales }} pers.
+                </span>
+                {% endif %}
+                {% if p.capacidad and p.capacidad != '—' %}
+                <span class="catalogo-meta-item">
+                    <i class="bi bi-cup-hot"></i> {{ p.capacidad }}
+                </span>
+                {% endif %}
+                <span class="catalogo-meta-item">
+                    <i class="bi bi-tag"></i> {{ p.tipo }}
+                </span>
+            </div>
+
+            {% if p.precio_ref and p.precio_ref > 0 %}
+            <div class="catalogo-precio">{{ moneda(p.precio_ref) }}</div>
+            {% else %}
+            <div class="catalogo-precio-ref">Precio a consultar</div>
+            {% endif %}
+        </div>
+
+        <!-- Acciones -->
+        <div class="catalogo-footer">
+            <a href="{{ p.url }}" target="_blank" class="btn btn-outline-secondary btn-sm flex-fill">
+                <i class="bi bi-box-arrow-up-right me-1"></i>Ver en sitio
+            </a>
+            <button class="btn btn-primary btn-sm flex-fill"
+                    onclick="registrarVenta('{{ p.nombre }}', '{{ p.linea }}', {{ p.precio_ref }}, '{{ p.marca }}')">
+                <i class="bi bi-cart-plus me-1"></i>Registrar venta
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state py-5">
+    <i class="bi bi-search fs-1 d-block mb-3 text-muted"></i>
+    No se encontraron productos con los filtros aplicados.
+    <a href="{{ url_for('catalogo') }}" class="d-block mt-2">Limpiar filtros</a>
+</div>
+{% endif %}
+
+<!-- Modal: Registrar venta rápida -->
+<div class="modal fade" id="modalVenta" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:20px; overflow:hidden">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-800">Registrar venta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formVentaRapida" method="post" action="{{ url_for('ventas') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Cliente</label>
+                        <input class="form-control" name="cliente" id="mv_cliente"
+                               list="clientesModalList"
+                               placeholder="Nombre del cliente (busque de la lista)" required>
+                        {% if clientes %}
+                        <datalist id="clientesModalList">
+                            {% for c in clientes %}
+                            <option value="{{ c.nombre }}">{{ c.nombre }}{% if c.telefono %} · {{ c.telefono }}{% endif %}</option>
+                            {% endfor %}
+                        </datalist>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Producto</label>
+                        <input class="form-control" name="nombre_producto" id="mv_producto" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Precio (Gs.)</label>
+                        <input class="form-control money-input" type="text" inputmode="numeric" name="precio" id="mv_precio" required>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">Interés % <small class="text-muted">(0=contado)</small></label>
+                            <input class="form-control" type="number" name="interes" id="mv_interes" value="0" step="0.01" min="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Cuotas <small class="text-muted">(0=contado)</small></label>
+                            <input class="form-control" type="number" name="plazo" id="mv_plazo" value="0" min="0">
+                        </div>
+                    </div>
+                    <input type="hidden" name="categoria" id="mv_categoria">
+                    <input type="hidden" name="descripcion" id="mv_descripcion">
+                    <!-- resumen -->
+                    <div class="mini-summary mt-3" id="mvResumen" style="display:none">
+                        <div><span>Cuota mensual</span><strong id="mvCuota">Gs. 0</strong></div>
+                        <div><span>Total a cobrar</span><strong id="mvTotal">Gs. 0</strong></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" type="button" id="btnGuardarVenta">
+                    <i class="bi bi-cart-check me-1"></i>Guardar venta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ── Catálogo grid ── */
+.catalogo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+.catalogo-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: .2s ease;
+    box-shadow: 0 4px 16px rgba(15,42,82,.06);
+}
+
+.catalogo-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+}
+
+/* Vista lista */
+.catalogo-grid.list-view {
+    grid-template-columns: 1fr;
+}
+
+.catalogo-grid.list-view .catalogo-card {
+    flex-direction: row;
+}
+
+.catalogo-grid.list-view .catalogo-img-wrap {
+    width: 160px;
+    flex-shrink: 0;
+}
+
+.catalogo-grid.list-view .catalogo-img-wrap .catalogo-img {
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Imagen */
+.catalogo-img-wrap {
+    position: relative;
+    background: #f8fafc;
+    height: 200px;
+    overflow: hidden;
+}
+
+.catalogo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 12px;
+    transition: .3s ease;
+}
+
+.catalogo-card:hover .catalogo-img { transform: scale(1.04); }
+
+.catalogo-img-placeholder {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    color: #cbd5e1;
+    background: #f8fafc;
+}
+
+/* Badge marca */
+.catalogo-marca-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: .73rem;
+    font-weight: 800;
+}
+
+.marca-badge-essen  { background: rgba(200,30,53,.12); color: #a5162b; }
+.marca-badge-tupi   { background: rgba(22,59,115,.12); color: var(--primary); }
+
+/* Nav pills */
+.nav-pills .nav-link {
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: .88rem;
+    padding: 8px 16px;
+    color: #475569;
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+}
+
+.nav-pills .nav-link.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.marca-tab.marca-essen.active  { background: #a5162b; border-color: #a5162b; }
+.marca-tab.marca-tupi.active   { background: var(--primary); border-color: var(--primary); }
+
+/* Body card */
+.catalogo-body {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.catalogo-linea {
+    font-size: .75rem;
+    font-weight: 800;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+.catalogo-nombre {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.3;
+}
+
+.catalogo-desc {
+    margin: 0;
+    font-size: .84rem;
+    color: #64748b;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.catalogo-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.catalogo-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .77rem;
+    font-weight: 700;
+    color: #475569;
+    background: #f1f5f9;
+    padding: 3px 8px;
+    border-radius: 999px;
+}
+
+.catalogo-precio {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: #166534;
+    margin-top: 4px;
+}
+
+.catalogo-precio-ref {
+    font-size: .83rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 4px;
+}
+
+/* Footer */
+.catalogo-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+}
+</style>
+
+<script>
+function setView(v) {
+    const grid = document.getElementById('productosGrid');
+    grid.classList.toggle('list-view', v === 'list');
+    document.getElementById('btnGrid').classList.toggle('active', v === 'grid');
+    document.getElementById('btnList').classList.toggle('active', v === 'list');
+    localStorage.setItem('catalogoView', v);
+}
+
+// Restaurar vista guardada
+const savedView = localStorage.getItem('catalogoView');
+if (savedView) setView(savedView);
+
+// ── Submit del modal: limpiar puntos de money-inputs antes de enviar ──
+document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('btnGuardarVenta');
+    if (btn) {
+        btn.addEventListener('click', function() {
+            var form = document.getElementById('formVentaRapida');
+            // Limpiar todos los campos con puntos de miles
+            form.querySelectorAll('.money-input, [data-money="true"]').forEach(function(inp) {
+                var raw = inp.dataset.raw || inp.value.replace(/\./g, '') || '0';
+                inp.value = raw;
+            });
+            // También limpiar mv_precio explícitamente
+            var precioEl = document.getElementById('mv_precio');
+            if (precioEl) {
+                precioEl.value = precioEl.dataset.raw || precioEl.value.replace(/\./g, '') || '0';
+            }
+            form.submit();
+        });
+    }
+});
+
+function registrarVenta(nombre, linea, precio, marca) {
+    document.getElementById('mv_producto').value = nombre;
+    const precioEl = document.getElementById('mv_precio');
+    const precioNum = parseInt(precio) || 0;
+    precioEl.dataset.raw = precioNum || '';
+    precioEl.value = precioNum ? precioNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.') : '';
+    document.getElementById('mv_categoria').value = linea;
+    document.getElementById('mv_descripcion').value = marca + ' - ' + linea;
+    document.getElementById('mv_cliente').value = '';
+    document.getElementById('mv_interes').value = 0;
+    document.getElementById('mv_plazo').value = 0;
+    document.getElementById('mvResumen').style.display = 'none';
+    new bootstrap.Modal(document.getElementById('modalVenta')).show();
+    setTimeout(() => document.getElementById('mv_cliente').focus(), 400);
+}
+
+// Cálculo cuotero en modal
+function calcularModal() {
+    const el = document.getElementById('mv_precio');
+    const p = parseFloat(el.dataset.raw || el.value.replace(/\./g,"")) || 0;
+    const t = parseFloat(document.getElementById('mv_interes').value) || 0;
+    const m = parseInt(document.getElementById('mv_plazo').value) || 0;
+    const res = document.getElementById('mvResumen');
+    if (p > 0 && m > 0) {
+        const total = p * (1 + t / 100);
+        const cuota = total / m;
+        function fmt(n){ return 'Gs. '+Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
+        document.getElementById('mvCuota').textContent = fmt(cuota);
+        document.getElementById('mvTotal').textContent = fmt(total);
+        res.style.display = '';
+    } else {
+        res.style.display = 'none';
+    }
+}
+
+['mv_precio','mv_interes','mv_plazo'].forEach(id => {
+    document.getElementById(id).addEventListener('input', calcularModal);
+});
+
+// ── Búsqueda en tiempo real del catálogo ─────────────────
+(function() {
+    const searchInput = document.getElementById('catalogSearch');
+    const grid = document.getElementById('productosGrid');
+    if (!searchInput || !grid) return;
+
+    const cards = Array.from(grid.querySelectorAll('.catalogo-card'));
+
+    function normalize(s) {
+        return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    }
+
+    searchInput.addEventListener('input', function() {
+        const q = normalize(this.value);
+        if (!q) {
+            cards.forEach(c => c.style.display = '');
+            return;
+        }
+        cards.forEach(function(card) {
+            const nombre  = normalize(card.querySelector('.catalogo-nombre')?.textContent || '');
+            const linea   = normalize(card.querySelector('.catalogo-linea')?.textContent || '');
+            const desc    = normalize(card.querySelector('.catalogo-desc')?.textContent || '');
+            const marca   = normalize(card.dataset.marca || '');
+            const visible = nombre.includes(q) || linea.includes(q) || desc.includes(q) || marca.includes(q);
+            card.style.display = visible ? '' : 'none';
+        });
+    });
+
+    // Trigger on load if there's an existing value
+    if (searchInput.value) searchInput.dispatchEvent(new Event('input'));
+})();
+</script>
+{% endblock %}

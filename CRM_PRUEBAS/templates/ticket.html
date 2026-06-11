@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Ticket | {{ APP_NAME }}{% endblock %}
+{% block page_title %}Ticket de pago{% endblock %}
+{% block page_description %}Comprobante para entregar al cliente. Documento sin valor fiscal.{% endblock %}
+{% block content %}
+<section class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">Ticket {{ ticket.id }}</h2>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" onclick="CRM.printSection('ticketCliente','Ticket de pago')"><i class="bi bi-printer me-1"></i>Imprimir</button>
+            {% if ticket.detalle %}
+            <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('cuotas_operacion', tipo=ticket.detalle.tipo, oid=ticket.detalle.indice) }}"><i class="bi bi-arrow-left me-1"></i>Volver a cuotas</a>
+            {% endif %}
+        </div>
+    </div>
+    <div id="ticketCliente" class="ticket-card">
+        <div class="ticket-head">
+            <div><h2>Ticket de pago</h2><p>Documento informativo - sin valor fiscal</p></div>
+            <div class="ticket-head-right"><strong>{{ ticket.id }}</strong><span class="ticket-status">{{ ticket.estado_label }}</span></div>
+        </div>
+        <div class="ticket-grid">
+            <div><span>Fecha de pago</span><strong>{{ ticket.fecha }}</strong></div>
+            <div><span>Fecha de emisión</span><strong>{{ ticket.fecha_emision }}</strong></div>
+            <div><span>Cliente</span><strong>{{ ticket.cliente }}</strong></div>
+            <div><span>Nro. operación</span><strong>{{ ticket.operacion_id }}</strong></div>
+            <div><span>Operación</span><strong>{{ ticket.tipo }}</strong></div>
+            <div><span>Detalle</span><strong>{{ ticket.operacion }}</strong></div>
+            <div><span>Cuota pagada</span><strong>{{ ticket.cuota_label }}</strong></div>
+            <div><span>Vencimiento de esta cuota</span><strong>{{ ticket.vencimiento }}</strong></div>
+            <div><span>Medio de pago</span><strong>{{ ticket.medio_pago }}</strong></div>
+            <div><span>Próxima cuota</span><strong>{{ ticket.proxima_cuota }}</strong></div>
+            <div><span>Próximo vencimiento</span><strong>{{ ticket.proximo_vencimiento }}</strong></div>
+            <div><span>Cuotas pagadas</span><strong>{{ ticket.cuotas_pagadas_label }}</strong></div>
+            <div><span>Cuotas pendientes</span><strong>{{ ticket.cuotas_pendientes_label }}</strong></div>
+            <div><span>Total del plan</span><strong>{{ ticket.total_operacion_fmt }}</strong></div>
+            <div class="ticket-highlight"><span>Total abonado</span><strong>{{ ticket.total_pagado_fmt }}</strong></div>
+            <div class="ticket-highlight"><span>Saldo pendiente actualizado</span><strong>{{ ticket.saldo_pendiente_fmt }}</strong></div>
+            <div class="ticket-total"><span>Monto recibido en esta cuota</span><strong>{{ ticket.monto_fmt }}</strong></div>
+        </div>
+        <div class="ticket-note">
+            Conserve este comprobante para control de sus pagos. Este documento no reemplaza factura legal ni recibo fiscal.
+            Ante cualquier consulta, indique el ticket <strong>{{ ticket.id }}</strong> y la operación <strong>{{ ticket.operacion_id }}</strong>.
+        </div>
+    </div>
+</section>
+{% endblock %}

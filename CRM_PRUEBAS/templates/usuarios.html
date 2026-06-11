@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Usuarios | {{ APP_NAME }}{% endblock %}
+{% block page_title %}Gestión de usuarios{% endblock %}
+{% block page_description %}Administrá los accesos al sistema. Solo el administrador puede ver esta sección.{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Nuevo usuario</h2>
+                <span class="badge-soft-danger">Solo admin</span>
+            </div>
+            <form method="post" class="row g-3" autocomplete="off">
+                <div class="col-12">
+                    <label class="form-label">Nombre completo</label>
+                    <input class="form-control" name="nombre" placeholder="Ej.: María García">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Usuario</label>
+                    <input class="form-control" name="username" placeholder="Ej.: maria.garcia" required autocomplete="off">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Contraseña</label>
+                    <input class="form-control" type="password" name="password" placeholder="Mínimo 6 caracteres" required autocomplete="new-password">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Rol</label>
+                    <select class="form-select" name="rol">
+                        <option value="operador" selected>Operador</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                    <div class="form-text">El administrador puede gestionar usuarios.</div>
+                </div>
+                <div class="col-12 d-grid">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-person-plus me-2"></i>Crear usuario
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel note-panel">
+            <div class="d-flex gap-3">
+                <div class="info-icon"><i class="bi bi-shield-lock"></i></div>
+                <div>
+                    <h3 class="small-title">Roles del sistema</h3>
+                    <p class="mb-0 text-muted small">
+                        <strong>Operador</strong>: accede a todos los módulos operativos.<br>
+                        <strong>Admin</strong>: además puede crear y eliminar usuarios.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-8">
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Usuarios del sistema</h2>
+                <span class="badge-soft-primary">{{ usuarios|length }} registros</span>
+            </div>
+            {% if usuarios %}
+            <div class="table-wrap">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nombre</th>
+                            <th>Usuario</th>
+                            <th>Rol</th>
+                            <th>Creado</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in usuarios %}
+                        <tr>
+                            <td class="text-muted">{{ u['id'] }}</td>
+                            <td class="fw-bold">{{ u['nombre'] or '—' }}</td>
+                            <td>
+                                <code>{{ u['username'] }}</code>
+                                {% if u['username'] == current_user %}
+                                    <span class="badge-soft-primary ms-1">yo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if u['rol'] == 'admin' %}
+                                    <span class="badge-soft-danger">admin</span>
+                                {% else %}
+                                    <span class="badge-soft-primary">operador</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ u['creado'] }}</td>
+                            <td>
+                                {% if u['username'] != current_user %}
+                                <form method="post" action="{{ url_for('eliminar_usuario', uid=u['id']) }}"
+                                      onsubmit="return confirm('¿Eliminar al usuario {{ u['username'] }}?')">
+                                    <button class="btn-del" type="submit" title="Eliminar">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                    <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">No hay usuarios registrados.</div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

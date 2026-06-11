@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Cuotas | {{ APP_NAME }}{% endblock %}
+{% block page_title %}Cuotas de operación{% endblock %}
+{% block page_description %}Marcar cuotas como pagadas, anular pagos y generar ticket para el cliente.{% endblock %}
+{% block content %}
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">{{ detalle.tipo_label }} · {{ detalle.cliente }}</h2>
+            <p class="panel-subtitle">{{ detalle.descripcion }} · Estado: {{ detalle.estado }}</p>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for(detalle.tipo + 's') if detalle.tipo in ['prestamo','venta'] else url_for('refinanciaciones') }}">
+            <i class="bi bi-arrow-left me-1"></i>Volver
+        </a>
+    </div>
+    <div class="print-card">
+        <div><span>Total operación</span><strong>{{ moneda(detalle.total) }}</strong></div>
+        <div><span>Cuota</span><strong>{{ moneda(detalle.cuota) }}</strong></div>
+        <div><span>Plazo</span><strong>{{ detalle.plazo }} cuota{{ '' if detalle.plazo == 1 else 's' }}</strong></div>
+        <div><span>Fecha inicio</span><strong>{{ detalle.fecha_inicio }}</strong></div>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="panel-header"><h2 class="panel-title">Cuotero operativo</h2><span class="badge-soft-primary">Botón pagado / anular / ticket</span></div>
+    <div class="table-wrap">
+        <table class="table table-hover">
+            <thead><tr><th>Cuota</th><th>Vencimiento</th><th>Monto</th><th>Estado</th><th>Fecha pago</th><th>Acciones</th></tr></thead>
+            <tbody>
+                {% for cuota in cuotas %}<tr>
+                    <td><span class="badge-soft-primary">{{ cuota.nro }}</span></td>
+                    <td>{{ cuota.vencimiento }}</td>
+                    <td class="fw-bold">{{ cuota.monto_fmt }}</td>
+                    <td>{% if cuota.pagado %}<span class="badge-soft-success">PAGADO</span>{% else %}<span class="badge-soft-danger">PENDIENTE</span>{% endif %}</td>
+                    <td>{{ cuota.fecha_pago or '—' }}</td>
+                    <td>
+                        <div class="d-flex gap-2 flex-wrap">
+                        {% if cuota.pagado %}
+                            <a class="btn btn-outline-primary btn-sm" href="{{ url_for('ticket_pago', cobro_id=cuota.pago_id) }}"><i class="bi bi-printer me-1"></i>Ticket</a>
+                            <form method="post" action="{{ url_for('anular_cuota', tipo=detalle.tipo, oid=detalle.indice, nro=cuota.nro) }}" class="d-inline">
+                                <input type="hidden" name="motivo" value="Anulado por operador">
+                                <button class="btn btn-outline-secondary btn-sm" type="submit" onclick="return confirm('¿Anular este pago?')"><i class="bi bi-x-circle me-1"></i>Anular</button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{{ url_for('pagar_cuota', tipo=detalle.tipo, oid=detalle.indice, nro=cuota.nro) }}" class="d-inline">
+                                <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-check2-circle me-1"></i>Pagado</button>
+                            </form>
+                            <form method="post" action="{{ url_for('pagar_cuota', tipo=detalle.tipo, oid=detalle.indice, nro=cuota.nro) }}" class="d-inline">
+                                <input type="hidden" name="generar_ticket" value="SI">
+                                <button class="btn btn-outline-primary btn-sm" type="submit"><i class="bi bi-receipt me-1"></i>Pagar y ticket</button>
+                            </form>
+                        {% endif %}
+                        </div>
+                    </td>
+                </tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="panel-header"><h2 class="panel-title">Historial de pagos</h2><span class="badge-soft-primary">Incluye anulaciones</span></div>
+    {% if pagos_historicos %}
+    <div class="table-wrap">
+        <table class="table table-hover">
+            <thead><tr><th>ID</th><th>Fecha</th><th>Cuota</th><th>Monto</th><th>Estado</th><th>Motivo anulación</th><th>Ticket</th></tr></thead>
+            <tbody>{% for p in pagos_historicos %}<tr>
+                <td class="fw-bold">{{ p.id }}</td>
+                <td>{{ p.fecha_pago }}</td>
+                <td>{{ p.nro_cuota }}</td>
+                <td>{{ moneda(p.monto) }}</td>
+                <td>{% if p.estado=='ANULADO' %}<span class="badge-soft-danger">ANULADO</span>{% else %}<span class="badge-soft-success">PAGADO</span>{% endif %}</td>
+                <td>{% if p.estado=='ANULADO' %}{{ p.motivo_anulacion }}<div class="small text-muted">{{ p.fecha_anulacion }}</div>{% else %}—{% endif %}</td>
+                <td>{% if p.estado!='ANULADO' %}<a class="btn btn-outline-primary btn-sm" href="{{ url_for('ticket_pago', cobro_id=p.id) }}">Ver ticket</a>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            </tr>{% endfor %}</tbody>
+        </table>
+    </div>
+    {% else %}<div class="empty-state">Todavía no hay pagos registrados para esta operación.</div>{% endif %}
+</section>
+{% endblock %}

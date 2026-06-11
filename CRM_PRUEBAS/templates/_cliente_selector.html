@@ -1,0 +1,19 @@
+<div class="col-12">
+    <label class="form-label">Cliente</label>
+    {% if clientes %}
+        <input class="form-control" name="cliente" list="clientesRegistrados"
+               data-client-input="true"
+               placeholder="Escriba nombre o cédula" autocomplete="off" required>
+        <datalist id="clientesRegistrados">
+            {% for c in clientes %}
+            <option value="{{ c.nombre }}">{{ c.nombre }}{% if c.cedula and c.cedula != '—' %} · CI {{ c.cedula }}{% endif %}{% if c.telefono %} · {{ c.telefono }}{% endif %}</option>
+            {% endfor %}
+        </datalist>
+        {# Serializar solo los campos necesarios para el JS del panel de riesgo #}
+        <script type="application/json" id="clientesData">{{ clientes | map(attribute='nombre') | list | tojson }}</script>
+        <div class="form-text">Busque por nombre. El sistema valida margen y riesgo al seleccionar.</div>
+    {% else %}
+        <div class="client-warning"><i class="bi bi-exclamation-triangle-fill"></i><span>No hay clientes. Créelo en el panel de abajo.</span></div>
+        <input class="form-control" name="cliente" required disabled placeholder="No hay clientes disponibles">
+    {% endif %}
+</div>

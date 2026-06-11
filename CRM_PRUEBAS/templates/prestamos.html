@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Préstamos | {{ APP_NAME }}{% endblock %}
+{% block page_title %}Gestión de préstamos{% endblock %}
+{% block page_description %}Simulación del cuotero, validación de riesgo y registro antes de otorgar el dinero.{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-xl-4 col-lg-5">
+        <section class="panel">
+            <div class="panel-header"><h2 class="panel-title">Nuevo préstamo</h2><span class="badge-soft-primary">Con cuotero previo</span></div>
+            <form method="post" class="row g-3" id="formPrestamo">
+                {% include "_cliente_selector.html" %}
+                <div class="col-12"><label class="form-label">Monto a entregar (Gs.)</label><input class="form-control" id="monto" type="text" data-money="true" name="monto" placeholder="Ej.: 1.500.000" required></div>
+                <div class="col-md-6"><label class="form-label">Interés total %</label><input class="form-control" id="interes" type="number" step="0.01" min="0" name="interes" placeholder="Ej.: 10" required></div>
+                <div class="col-md-6"><label class="form-label">Plazo meses</label><input class="form-control" id="plazo" type="number" min="1" name="plazo" placeholder="Ej.: 12" required></div>
+                <div class="col-12">
+                    <label class="form-label">Fecha de operación <small class="text-muted">(vacío = hoy)</small></label>
+                    <input class="form-control" type="date" name="fecha_operacion" id="fechaOp" max="{{ hoy() }}">
+                    <div class="form-text"><i class="bi bi-info-circle me-1"></i>Para regularizaciones o cargos atrasados.</div>
+                </div>
+                <div class="col-12">
+                    <div class="mini-summary">
+                        <div><span>Cuota mensual</span><strong id="previewCuota">Gs. 0</strong></div>
+                        <div><span>Total a cobrar</span><strong id="previewTotal">Gs. 0</strong></div>
+                        <div><span>Ganancia</span><strong class="text-success" id="previewGanancia">Gs. 0</strong></div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="check-line"><input type="checkbox" name="autorizar_excepcion" value="SI"><span>Autorizar excepción si el cliente no cumple el margen mínimo de pago.</span></label>
+                </div>
+                <div class="col-12 d-grid"><button class="btn btn-primary" type="submit" {% if not clientes %}disabled{% endif %}><i class="bi bi-check2-circle me-2"></i>Registrar préstamo</button></div>
+            </form>
+        </section>
+        {% include "_pendientes_cliente.html" %}
+        {% include "_cliente_rapido.html" %}
+        <section class="panel note-panel"><div class="d-flex gap-3"><div class="info-icon"><i class="bi bi-info-lg"></i></div><div><h3 class="small-title">Control de riesgo</h3><p class="mb-0 text-muted">El sistema valida si el cliente cumple el % mínimo pagado antes de otorgar un nuevo crédito.</p></div></div></section>
+    </div>
+    <div class="col-xl-8 col-lg-7">
+        <section class="panel">
+            <div class="panel-header"><h2 class="panel-title">Cuotero antes de otorgar el crédito</h2><div class="d-flex gap-2"><span class="badge-soft-success">Simulación automática</span><button class="btn btn-outline-secondary btn-sm" type="button" onclick="CRM.printSection('cuoteroPrint','Cuotero')"><i class="bi bi-printer me-1"></i>Imprimir</button></div></div>
+            <div id="cuoteroPrint">
+                <div class="print-card">
+                    <div><span>Monto financiado</span><strong id="printCapital">Gs. 0</strong></div>
+                    <div><span>Cuota mensual</span><strong id="printCuota">Gs. 0</strong></div>
+                    <div><span>Total a pagar</span><strong id="printTotal">Gs. 0</strong></div>
+                </div>
+                <div class="table-wrap cuotero-wrap">
+                    <table class="table table-hover">
+                        <thead><tr><th>Cuota</th><th>Vencimiento estimado</th><th>Monto cuota</th><th>Saldo después de pagar</th></tr></thead>
+                        <tbody id="cuoteroBody"><tr><td colspan="4" class="text-center text-muted py-4">Ingrese monto, interés y plazo para ver el cuotero.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<section class="panel mt-2">
+    <div class="panel-header"><h2 class="panel-title">Préstamos cargados</h2><span class="badge-soft-primary">{{ prestamos|length }} registros</span></div>
+    {% if prestamos %}
+    <div class="table-wrap">
+        <table class="table table-hover">
+            <thead><tr><th>Cliente</th><th>Monto</th><th>Interés</th><th>Plazo</th><th>Cuota</th><th>Riesgo/saldo</th><th>Pagadas</th><th>Estado</th><th>Fecha</th><th>Vencimiento</th><th>Cuotas</th><th></th></tr></thead>
+            <tbody>
+                {% for p in prestamos %}
+                {% set saldo_tuple = [p.total|float - p.cuota|float * p.cuotas_pagadas|int, 0]|sort %}
+                <tr>
+                    <td class="fw-bold">{{ p.cliente }}</td>
+                    <td>{{ moneda(p.monto) }}</td>
+                    <td>{{ porcentaje(p.interes) }}</td>
+                    <td>{{ p.plazo }} meses</td>
+                    <td>{{ moneda(p.cuota) }}</td>
+                    <td>{{ moneda([p.total|float - p.cuota|float * p.cuotas_pagadas|int, 0]|max) }}</td>
+                    <td>{{ p.cuotas_pagadas }}</td>
+                    <td>
+                        {% if p.estado == 'REFINANCIADO' %}<span class="badge-soft-danger">REFINANCIADO</span>
+                        {% elif p.estado == 'CANCELADO' %}<span class="badge-soft-primary">CANCELADO</span>
+                        {% else %}<span class="badge-soft-success">ACTIVO</span>{% endif %}
+                    </td>
+                    <td>{{ p.fecha }}</td>
+                    <td><span class="badge-soft-danger">{{ p.vencimiento }}</span></td>
+                    <td><a class="btn btn-outline-primary btn-sm" href="{{ url_for('cuotas_operacion', tipo='prestamo', oid=p.id) }}"><i class="bi bi-list-check me-1"></i>Ver cuotas</a></td>
+                    <td><form method="post" action="{{ url_for('eliminar_prestamo', pid=p.id) }}" onsubmit="return confirm('¿Eliminar préstamo de {{ p.cliente }}?')"><button class="btn-del" type="submit"><i class="bi bi-trash3"></i></button></form></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}<div class="empty-state">No hay préstamos registrados.</div>{% endif %}
+</section>
+
+<script>
+(function(){
+    const elM=document.getElementById('monto'), elI=document.getElementById('interes'),
+          elP=document.getElementById('plazo'), elF=document.getElementById('fechaOp');
+    function money(v){ return CRM.currency(v); }
+    function addM(d,m){ const r=new Date(d.getTime()); r.setMonth(r.getMonth()+m); return r.toISOString().slice(0,10); }
+    function calc(){
+        const cap=CRM.parseMoney(elM.dataset.raw||elM.value), tasa=CRM.parseDecimal(elI.value), mes=parseInt(elP.value)||0;
+        if(cap<=0||mes<=0){ ['previewCuota','previewTotal','previewGanancia','printCapital','printCuota','printTotal'].forEach(id=>document.getElementById(id).textContent=money(0));
+            document.getElementById('cuoteroBody').innerHTML='<tr><td colspan="4" class="text-center text-muted py-4">Ingrese monto, interés y plazo para ver el cuotero.</td></tr>'; return; }
+        const total=cap*(1+tasa/100), gan=total-cap, cuota=total/mes;
+        const base=elF&&elF.value?new Date(elF.value+'T00:00:00'):new Date();
+        let saldo=total, rows='';
+        for(let i=1;i<=mes;i++){ saldo=Math.max(0,saldo-cuota); rows+=`<tr><td><span class="badge-soft-primary">${i}</span></td><td>${addM(base,i)}</td><td class="fw-bold">${money(cuota)}</td><td>${money(saldo)}</td></tr>`; }
+        document.getElementById('previewCuota').textContent=money(cuota);
+        document.getElementById('previewTotal').textContent=money(total);
+        document.getElementById('previewGanancia').textContent=money(gan);
+        document.getElementById('printCapital').textContent=money(cap);
+        document.getElementById('printCuota').textContent=money(cuota);
+        document.getElementById('printTotal').textContent=money(total);
+        document.getElementById('cuoteroBody').innerHTML=rows;
+    }
+    elM.addEventListener('money-change',calc); elM.addEventListener('input',calc);
+    elI.addEventListener('input',calc); elP.addEventListener('input',calc);
+    if(elF) elF.addEventListener('change',calc);
+    calc();
+})();
+</script>
+{% endblock %}

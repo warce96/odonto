@@ -1,0 +1,20 @@
+<section class="panel pending-panel">
+    <div class="panel-header">
+        <div><h2 class="panel-title">Riesgo y pendientes del cliente</h2><p class="panel-subtitle">Al escribir el nombre se muestran deudas activas y alertas.</p></div>
+        <span class="badge-soft-primary" data-pending-count>0 pendientes</span>
+    </div>
+    <div class="risk-box d-none" data-client-risk>
+        <div><span>Riesgo actual</span><strong data-risk-total>Gs. 0</strong></div>
+        <div><span>Pagado estimado</span><strong data-risk-paid>Gs. 0</strong></div>
+        <div><span>Margen requerido</span><strong data-risk-margin>0.00%</strong></div>
+        <div><span>Estado para nuevo crédito</span><strong data-risk-status>Sin datos</strong></div>
+    </div>
+    <div class="pending-help" data-pending-help>Busque un cliente para ver sus deudas activas antes de cargar otra operación.</div>
+    <div class="table-wrap pending-table-wrap d-none" data-pending-table>
+        <table class="table table-hover">
+            <thead><tr><th>Tipo</th><th>Detalle</th><th>Saldo</th><th>Pagado</th><th>Fecha</th><th>Vencimiento</th></tr></thead>
+            <tbody data-pendientes-body></tbody>
+        </table>
+    </div>
+    <script type="application/json" id="pendientesData">{{ pendientes | default([]) | tojson }}</script>
+</section>

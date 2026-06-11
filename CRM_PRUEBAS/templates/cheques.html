@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Cheques | {{ APP_NAME }}{% endblock %}
+{% block page_title %}Ejecución de cheques{% endblock %}
+{% block page_description %}Cálculo de descuento y monto neto entregado al cliente.{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <section class="panel">
+            <div class="panel-header"><h2 class="panel-title">Nuevo cheque</h2></div>
+            <form method="post" class="row g-3">
+                {% include "_cliente_selector.html" %}
+                <div class="col-12"><label class="form-label">Monto del cheque (Gs.)</label><input class="form-control" id="chMonto" type="text" data-money="true" name="monto" placeholder="Ej.: 1.000.000" required></div>
+                <div class="col-12"><label class="form-label">Descuento %</label><input class="form-control" id="chDesc" type="number" step="0.01" min="0" name="porcentaje" placeholder="Ej.: 8" required></div>
+                <div class="col-12"><div class="mini-summary">
+                    <div><span>Monto bruto</span><strong id="chBruto">Gs. 0</strong></div>
+                    <div><span>Descuento</span><strong class="text-danger" id="chDescVal">Gs. 0</strong></div>
+                    <div><span>Neto al cliente</span><strong class="text-success" id="chNeto">Gs. 0</strong></div>
+                </div></div>
+                <div class="col-12 d-grid"><button class="btn btn-primary" type="submit" {% if not clientes %}disabled{% endif %}><i class="bi bi-receipt-cutoff me-2"></i>Guardar cheque</button></div>
+            </form>
+        </section>
+        {% include "_pendientes_cliente.html" %}
+        {% include "_cliente_rapido.html" %}
+    </div>
+    <div class="col-lg-8">
+        <section class="panel">
+            <div class="panel-header"><h2 class="panel-title">Cheques cargados</h2><span class="badge-soft-primary">{{ cheques|length }} registros</span></div>
+            {% if cheques %}
+            <div class="table-wrap">
+                <table class="table table-hover">
+                    <thead><tr><th>Cliente</th><th>Monto</th><th>Descuento</th><th>Neto cliente</th><th>Fecha</th><th></th></tr></thead>
+                    <tbody>{% for ch in cheques %}<tr>
+                        <td class="fw-bold">{{ ch.cliente }}</td>
+                        <td>{{ moneda(ch.monto) }}</td>
+                        <td>{{ porcentaje(ch.descuento) }}</td>
+                        <td><span class="badge-soft-success">{{ moneda(ch.neto) }}</span></td>
+                        <td>{{ ch.fecha }}</td>
+                        <td><form method="post" action="{{ url_for('eliminar_cheque', cid=ch.id) }}" onsubmit="return confirm('¿Eliminar cheque?')"><button class="btn-del" type="submit"><i class="bi bi-trash3"></i></button></form></td>
+                    </tr>{% endfor %}</tbody>
+                </table>
+            </div>
+            {% else %}<div class="empty-state">No hay cheques registrados.</div>{% endif %}
+        </section>
+    </div>
+</div>
+<script>
+(function(){
+    const m=document.getElementById('chMonto'), d=document.getElementById('chDesc');
+    function calc(){ const mn=CRM.parseMoney(m.dataset.raw||m.value), dc=CRM.parseDecimal(d.value), dv=mn*dc/100;
+        document.getElementById('chBruto').textContent=CRM.currency(mn);
+        document.getElementById('chDescVal').textContent=CRM.currency(dv);
+        document.getElementById('chNeto').textContent=CRM.currency(mn-dv); }
+    if(m){ m.addEventListener('money-change',calc); m.addEventListener('input',calc); }
+    if(d) d.addEventListener('input',calc); calc();
+})();
+</script>
+{% endblock %}

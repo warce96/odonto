@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+{% block title %}Detalle Préstamo | {{ APP_NAME }}{% endblock %}
+{% block page_title %}Detalle del préstamo{% endblock %}
+{% block page_description %}Seguimiento de cuotas y pagos del cliente.{% endblock %}
+
+{% block content %}
+
+{# ── Encabezado resumen ── #}
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">
+                    <i class="bi bi-person-circle me-2 text-primary"></i>{{ p['cliente'] }}
+                </h2>
+                <a href="{{ url_for('prestamos') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Volver
+                </a>
+            </div>
+            <div class="row g-3">
+                <div class="col-sm-4">
+                    <div class="detail-item">
+                        <span class="detail-label">Monto entregado</span>
+                        <strong class="detail-val">{{ moneda(p['monto']) }}</strong>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="detail-item">
+                        <span class="detail-label">Interés</span>
+                        <strong class="detail-val">{{ porcentaje(p['interes']) }}</strong>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="detail-item">
+                        <span class="detail-label">Plazo</span>
+                        <strong class="detail-val">{{ p['plazo'] }} meses</strong>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="detail-item">
+                        <span class="detail-label">Cuota mensual</span>
+                        <strong class="detail-val">{{ moneda(p['cuota']) }}</strong>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="detail-item">
+                        <span class="detail-label">Total a cobrar</span>
+                        <strong class="detail-val">{{ moneda(p['total']) }}</strong>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="detail-item">
+                        <span class="detail-label">Ganancia</span>
+                        <strong class="detail-val text-success">{{ moneda(p['ganancia']) }}</strong>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="detail-item">
+                        <span class="detail-label">Fecha operación</span>
+                        <strong class="detail-val">{{ p['fecha'] }}</strong>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="detail-item">
+                        <span class="detail-label">Vencimiento final</span>
+                        <strong class="detail-val text-danger">{{ p['vencimiento'] }}</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    {# ── Resumen financiero ── #}
+    <div class="col-lg-4">
+        <section class="panel h-100">
+            <div class="panel-header">
+                <h2 class="panel-title">Estado de cobro</h2>
+            </div>
+            {% set total_cuotas = pagos|length %}
+            {% set cuotas_pagadas = pagos|selectattr('estado','equalto','pagado')|list|length %}
+            {% set cuotas_parciales = pagos|selectattr('estado','equalto','parcial')|list|length %}
+            {% set cuotas_vencidas = pagos|selectattr('estado','equalto','pendiente')|selectattr('fecha_venc','lt',hoy())|list|length %}
+
+            <div class="profit-list">
+                <div class="profit-item">
+                    <span>Total a cobrar</span>
+                    <strong>{{ moneda(p['total']) }}</strong>
+                </div>
+                <div class="profit-item">
+                    <span>Cobrado</span>
+                    <strong class="text-success">{{ moneda(pagados) }}</strong>
+                </div>
+                <div class="profit-item total">
+                    <span>Saldo pendiente</span>
+                    <strong class="{% if pendiente > 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ moneda(pendiente) }}
+                    </strong>
+                </div>
+            </div>
+
+            <div class="mt-3 d-flex flex-wrap gap-2">
+                <span class="badge-soft-success">{{ cuotas_pagadas }} pagadas</span>
+                {% if cuotas_parciales > 0 %}
+                <span class="badge-soft-warning">{{ cuotas_parciales }} parciales</span>
+                {% endif %}
+                {% if cuotas_vencidas > 0 %}
+                <span class="badge-soft-danger">{{ cuotas_vencidas }} vencidas</span>
+                {% endif %}
+                <span class="badge-soft-primary">{{ total_cuotas - cuotas_pagadas - cuotas_parciales }} pendientes</span>
+            </div>
+
+            {# Barra de progreso #}
+            {% if total_cuotas > 0 %}
+            {% set pct = ((cuotas_pagadas / total_cuotas) * 100)|int %}
+            <div class="mt-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <small class="text-muted">Progreso de cobro</small>
+                    <small class="fw-bold">{{ pct }}%</small>
+                </div>
+                <div class="progress" style="height:8px;border-radius:99px;">
+                    <div class="progress-bar bg-success" style="width:{{ pct }}%;border-radius:99px;"></div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="mt-3 d-grid gap-2">
+                <button class="btn btn-outline-secondary btn-sm" onclick="imprimirComprobante()">
+                    <i class="bi bi-printer me-1"></i>Imprimir estado de cuenta
+                </button>
+            </div>
+        </section>
+    </div>
+</div>
+
+{# ── Tabla de cuotas ── #}
+<section class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">Cuotas y pagos</h2>
+        <span class="badge-soft-primary">{{ pagos|length }} cuotas</span>
+    </div>
+
+    {% if pagos %}
+    <div class="table-wrap">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Vencimiento</th>
+                    <th>Monto cuota</th>
+                    <th>Pagado</th>
+                    <th>Fecha pago</th>
+                    <th>Estado</th>
+                    <th>Observación</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cuota in pagos %}
+                <tr class="{% if cuota['estado'] == 'pagado' %}table-light{% elif cuota['fecha_venc'] < hoy() and cuota['estado'] == 'pendiente' %}table-danger bg-opacity-10{% endif %}">
+                    <td><span class="badge-soft-primary">{{ cuota['nro_cuota'] }}</span></td>
+                    <td>
+                        {{ cuota['fecha_venc'] }}
+                        {% if cuota['fecha_venc'] < hoy() and cuota['estado'] == 'pendiente' %}
+                        <span class="badge-soft-danger ms-1">Vencida</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold">{{ moneda(cuota['monto_cuota']) }}</td>
+                    <td>
+                        {% if cuota['monto_pagado'] %}
+                            {{ moneda(cuota['monto_pagado']) }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>{{ cuota['fecha_pago'] or '—' }}</td>
+                    <td>
+                        {% if cuota['estado'] == 'pagado' %}
+                            <span class="badge-soft-success"><i class="bi bi-check-circle me-1"></i>Pagado</span>
+                        {% elif cuota['estado'] == 'parcial' %}
+                            <span class="badge-soft-warning"><i class="bi bi-dash-circle me-1"></i>Parcial</span>
+                        {% elif cuota['fecha_venc'] < hoy() %}
+                            <span class="badge-soft-danger"><i class="bi bi-exclamation-circle me-1"></i>Vencida</span>
+                        {% else %}
+                            <span class="badge-soft-primary"><i class="bi bi-clock me-1"></i>Pendiente</span>
+                        {% endif %}
+                    </td>
+                    <td><small class="text-muted">{{ cuota['observacion'] or '' }}</small></td>
+                    <td>
+                        {% if cuota['estado'] != 'pagado' %}
+                        <button class="btn btn-primary btn-sm"
+                                onclick="abrirPago({{ cuota['id'] }}, {{ p['id'] }}, {{ cuota['monto_cuota'] }}, {{ cuota['nro_cuota'] }})">
+                            <i class="bi bi-cash me-1"></i>Pagar
+                        </button>
+                        {% else %}
+                        <form method="post"
+                              action="{{ url_for('revertir_pago', pid=p['id'], pago_id=cuota['id']) }}"
+                              onsubmit="return confirm('¿Revertir este pago?')">
+                            <button class="btn btn-outline-secondary btn-sm" type="submit">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Revertir
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-info-circle fs-2 d-block mb-2"></i>
+        No se generaron cuotas para este préstamo.
+    </div>
+    {% endif %}
+</section>
+
+{# ── Modal pago ── #}
+<div class="modal fade" id="modalPago" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:20px;overflow:hidden">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-800">Registrar pago — Cuota <span id="mpNro"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formPago" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Monto a pagar (Gs.)</label>
+                        <input class="form-control money-input" type="text" inputmode="numeric"
+                               name="monto_pagado" id="mpMonto" required>
+                        <div class="form-text" id="mpCuotaRef"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fecha de pago</label>
+                        <input class="form-control" type="date" name="fecha_pago"
+                               id="mpFecha" value="{{ hoy() }}" max="{{ hoy() }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observación <small class="text-muted">(opcional)</small></label>
+                        <input class="form-control" type="text" name="observacion"
+                               placeholder="Ej.: pagó en efectivo, transferencia, etc.">
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2-circle me-1"></i>Confirmar pago
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# ── Comprobante estado de cuenta ── #}
+<div id="estadoCuentaWrap" style="display:none">
+    <div id="estadoCuenta" class="comprobante-print">
+        <div class="comp-header">
+            <div class="comp-logo">{{ APP_INITIALS }}</div>
+            <div>
+                <h1 class="comp-title">{{ APP_NAME }}</h1>
+                <p class="comp-sub">Estado de cuenta — {{ p['cliente'] }}</p>
+            </div>
+        </div>
+        <div class="comp-divider"></div>
+        <table class="comp-table">
+            <tr><th>Cliente</th><td>{{ p['cliente'] }}</td></tr>
+            <tr><th>Monto entregado</th><td>{{ moneda(p['monto']) }}</td></tr>
+            <tr><th>Total a cobrar</th><td>{{ moneda(p['total']) }}</td></tr>
+            <tr><th>Cuota mensual</th><td>{{ moneda(p['cuota']) }}</td></tr>
+            <tr><th>Fecha operación</th><td>{{ p['fecha'] }}</td></tr>
+            <tr><th>Vencimiento final</th><td>{{ p['vencimiento'] }}</td></tr>
+            <tr><th>Cobrado</th><td>{{ moneda(pagados) }}</td></tr>
+            <tr><th>Saldo pendiente</th><td>{{ moneda(pendiente) }}</td></tr>
+        </table>
+        <div class="comp-divider"></div>
+        <h3 class="comp-cuotero-title">Detalle de cuotas</h3>
+        <table class="comp-cuotero">
+            <thead>
+                <tr><th>#</th><th>Vencimiento</th><th>Cuota</th><th>Pagado</th><th>Fecha pago</th><th>Estado</th></tr>
+            </thead>
+            <tbody>
+                {% for c in pagos %}
+                <tr>
+                    <td>{{ c['nro_cuota'] }}</td>
+                    <td>{{ c['fecha_venc'] }}</td>
+                    <td>{{ moneda(c['monto_cuota']) }}</td>
+                    <td>{{ moneda(c['monto_pagado']) if c['monto_pagado'] else '—' }}</td>
+                    <td>{{ c['fecha_pago'] or '—' }}</td>
+                    <td>{{ c['estado']|capitalize }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="comp-footer">
+            <p>Generado el {{ hoy() }} — {{ APP_NAME }}</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e8eef7;
+    border-radius: 14px;
+}
+.detail-label { font-size: .78rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .04em; }
+.detail-val   { font-size: 1rem; font-weight: 800; color: #0f172a; }
+
+@media print {
+    body * { visibility: hidden !important; }
+    #estadoCuenta, #estadoCuenta * { visibility: visible !important; }
+    #estadoCuenta {
+        position: fixed !important;
+        top: 0; left: 0;
+        width: 100% !important;
+        background: #fff !important;
+        padding: 24px !important;
+    }
+}
+/* Reutilizar estilos de comprobante del template de préstamos */
+.comprobante-print { font-family: Inter, system-ui, sans-serif; font-size: 13px; color: #0f172a; max-width: 680px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; }
+.comp-header { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+.comp-logo { width:48px;height:48px;border-radius:14px;background:#163b73;color:#fff;font-weight:900;font-size:1rem;display:grid;place-items:center; }
+.comp-title { margin:0;font-size:1.2rem;font-weight:900; }
+.comp-sub   { margin:2px 0 0;color:#64748b;font-size:.82rem; }
+.comp-divider { height:1px;background:#e2e8f0;margin:14px 0; }
+.comp-table { width:100%;border-collapse:collapse;margin-bottom:4px; }
+.comp-table th { width:44%;text-align:left;padding:6px 8px;color:#64748b;font-weight:700;font-size:.82rem;background:#f8fafc;border-bottom:1px solid #f1f5f9; }
+.comp-table td { padding:6px 8px;font-weight:600;border-bottom:1px solid #f1f5f9; }
+.comp-cuotero-title { font-size:.88rem;font-weight:800;color:#334155;margin:14px 0 8px;text-transform:uppercase;letter-spacing:.05em; }
+.comp-cuotero { width:100%;border-collapse:collapse;font-size:.82rem; }
+.comp-cuotero th { background:#163b73;color:#fff;padding:6px 10px;text-align:left;font-weight:700; }
+.comp-cuotero td { padding:5px 10px;border-bottom:1px solid #f1f5f9; }
+.comp-cuotero tr:nth-child(even) td { background:#f8fafc; }
+.comp-footer { margin-top:20px;color:#94a3b8;font-size:.78rem; }
+</style>
+
+<script>
+function abrirPago(pagoId, prestamoId, montoCuota, nroCuota) {
+    document.getElementById('mpNro').textContent = nroCuota;
+    document.getElementById('mpCuotaRef').textContent =
+        'Cuota: Gs. ' + Math.round(montoCuota).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+    // Precargar el monto
+    const inp = document.getElementById('mpMonto');
+    inp.dataset.raw = Math.round(montoCuota);
+    inp.value = Math.round(montoCuota).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+    document.getElementById('formPago').action =
+        '/prestamos/' + prestamoId + '/pagar/' + pagoId;
+
+    new bootstrap.Modal(document.getElementById('modalPago')).show();
+    setTimeout(() => inp.focus(), 400);
+}
+
+window.imprimirComprobante = function() {
+    document.getElementById('estadoCuentaWrap').style.display = '';
+    window.print();
+};
+</script>
+{% endblock %}

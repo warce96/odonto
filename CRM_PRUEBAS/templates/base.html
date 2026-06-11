@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ APP_NAME }}{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-mark">{{ APP_INITIALS }}</div>
+            <div>
+                <p class="brand-title">{{ APP_NAME }}</p>
+                <p class="brand-subtitle">{{ APP_TAGLINE }}</p>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <a class="{% if request.endpoint=='index' %}active{% endif %}" href="{{ url_for('index') }}"><i class="bi bi-grid-1x2-fill"></i> Inicio</a>
+            <a class="{% if request.endpoint=='clientes' %}active{% endif %}" href="{{ url_for('clientes') }}"><i class="bi bi-people-fill"></i> Clientes</a>
+            <a class="{% if request.endpoint=='prestamos' %}active{% endif %}" href="{{ url_for('prestamos') }}"><i class="bi bi-cash-coin"></i> Préstamos</a>
+            <a class="{% if request.endpoint=='refinanciaciones' %}active{% endif %}" href="{{ url_for('refinanciaciones') }}"><i class="bi bi-arrow-repeat"></i> Refinanciación</a>
+            <a class="{% if request.endpoint=='ventas' %}active{% endif %}" href="{{ url_for('ventas') }}"><i class="bi bi-cart-check-fill"></i> Ventas</a>
+            <a class="{% if request.endpoint=='cheques' %}active{% endif %}" href="{{ url_for('cheques') }}"><i class="bi bi-bank2"></i> Cheques</a>
+            <a class="{% if request.endpoint=='catalogo' %}active{% endif %}" href="{{ url_for('catalogo') }}"><i class="bi bi-grid-3x3-gap-fill"></i> Catálogo</a>
+            {% if current_rol == 'admin' %}
+            <a class="{% if request.endpoint=='usuarios' %}active{% endif %}" href="{{ url_for('usuarios') }}"><i class="bi bi-shield-lock-fill"></i> Usuarios</a>
+            {% endif %}
+        </nav>
+        <div class="sidebar-user">
+            <div class="user-avatar">{{ current_user[0]|upper if current_user else '?' }}</div>
+            <div class="user-info">
+                <span class="user-name">{{ session.nombre if session.nombre else current_user }}</span>
+                <span class="user-role">{{ current_rol }}</span>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn-logout" title="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></a>
+        </div>
+    </aside>
+    <main class="content">
+        <div class="topbar">
+            <div>
+                <p class="page-eyebrow">Panel operativo</p>
+                <h1 class="page-title">{% block page_title %}{{ APP_NAME }}{% endblock %}</h1>
+                <p class="page-description">{% block page_description %}{% endblock %}</p>
+            </div>
+            <div class="date-pill"><i class="bi bi-calendar3 me-2"></i>{{ hoy() }}</div>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for cat, msg in messages %}<div class="alert alert-{{ cat }} mb-3">{{ msg }}</div>{% endfor %}{% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='money_input.js') }}"></script>
+</body>
+</html>

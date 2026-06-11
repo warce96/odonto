@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Refinanciación | {{ APP_NAME }}{% endblock %}
+{% block page_title %}Refinanciaciones{% endblock %}
+{% block page_description %}Reestructuración de una operación pendiente existente, con historial de mora y estado refinanciado en la operación original.{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-xl-4 col-lg-5">
+        <section class="panel">
+            <div class="panel-header"><h2 class="panel-title">Nueva refinanciación</h2><span class="badge-soft-primary">Desde pendiente</span></div>
+            <form method="post" class="row g-3">
+                {% include "_cliente_selector.html" %}
+                <div class="col-12">
+                    <label class="form-label">Operación pendiente a refinanciar</label>
+                    <select class="form-select" id="operacionPendiente" name="operacion_id" required disabled>
+                        <option value="">Primero busque un cliente</option>
+                    </select>
+                    <div class="form-text">Seleccione una operación específica, o "Toda la deuda" para unificar todas las pendientes.</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Deuda actual / saldo pendiente</label>
+                    <input class="form-control" id="deudaActual" type="text" data-money="true"
+                           name="deuda_actual" placeholder="Se completa al elegir una operación"
+                           readonly required>
+                    <div class="form-text" id="deudaHelp" style="display:none">
+                        <i class="bi bi-pencil me-1"></i>Podés ajustar el monto manualmente si es necesario.
+                    </div>
+                </div>
+                <div class="col-md-6"><label class="form-label">Cuotas pagadas de la operación original</label><input class="form-control" type="number" min="0" name="cuotas_pagadas_origen" value="0"></div>
+                <div class="col-md-6"><label class="form-label">Tuvo mora</label><select class="form-select" name="tuvo_mora_origen"><option value="NO">NO</option><option value="SI">SI</option></select></div>
+                <div class="col-md-6"><label class="form-label">Días de mora</label><input class="form-control" type="number" min="0" name="dias_mora_origen" value="0"></div>
+                <div class="col-md-6"><label class="form-label">Mora acumulada</label><input class="form-control" type="text" data-money="true" name="mora_acumulada_origen" placeholder="Gs. 0"></div>
+                <div class="col-12"><label class="form-label">Costo administrativo</label><input class="form-control" id="costoAdmin" type="text" data-money="true" name="costo_admin" placeholder="Ej.: 50.000"></div>
+                <div class="col-md-6"><label class="form-label">Interés nuevo %</label><input class="form-control" id="interesRef" type="number" step="0.01" min="0" name="interes" placeholder="Ej.: 12" required></div>
+                <div class="col-md-6"><label class="form-label">Nuevo plazo meses</label><input class="form-control" id="plazoRef" type="number" min="1" name="plazo" placeholder="Ej.: 10" required></div>
+                <div class="col-12"><label class="form-label">Observación</label><textarea class="form-control" name="observacion" rows="2" placeholder="Motivo o acuerdo con el cliente"></textarea></div>
+                <div class="col-12"><div class="mini-summary">
+                    <div><span>Nueva cuota</span><strong id="refCuota">Gs. 0</strong></div>
+                    <div><span>Total refinanciado</span><strong id="refTotal">Gs. 0</strong></div>
+                    <div><span>Ganancia estimada</span><strong class="text-success" id="refGanancia">Gs. 0</strong></div>
+                </div></div>
+                <div class="col-12 d-grid"><button class="btn btn-primary" type="submit" {% if not clientes %}disabled{% endif %}><i class="bi bi-arrow-repeat me-2"></i>Guardar refinanciación</button></div>
+            </form>
+        </section>
+        {% include "_pendientes_cliente.html" %}
+        {% include "_cliente_rapido.html" %}
+    </div>
+    <div class="col-xl-8 col-lg-7">
+        <section class="panel">
+            <div class="panel-header"><h2 class="panel-title">Cuotero de refinanciación</h2><button class="btn btn-outline-secondary btn-sm" onclick="CRM.printSection('refPrint','Cuotero refinanciación')"><i class="bi bi-printer me-1"></i>Imprimir</button></div>
+            <div id="refPrint">
+                <div class="print-card"><div><span>Saldo refinanciado</span><strong id="refPrintDeuda">Gs. 0</strong></div><div><span>Nueva cuota</span><strong id="refPrintCuota">Gs. 0</strong></div><div><span>Total a pagar</span><strong id="refPrintTotal">Gs. 0</strong></div></div>
+                <div class="table-wrap cuotero-wrap">
+                    <table class="table table-hover"><thead><tr><th>Cuota</th><th>Vencimiento estimado</th><th>Monto cuota</th><th>Saldo refinanciado</th></tr></thead>
+                    <tbody id="refCuoteroBody"><tr><td colspan="4" class="text-center text-muted py-4">Seleccione operación, interés y plazo.</td></tr></tbody></table>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<section class="panel mt-2">
+    <div class="panel-header"><h2 class="panel-title">Refinanciaciones cargadas</h2><span class="badge-soft-primary">{{ refinanciaciones|length }} registros</span></div>
+    {% if refinanciaciones %}
+    <div class="table-wrap">
+        <table class="table table-hover">
+            <thead><tr><th>Cliente</th><th>Origen</th><th>Deuda anterior</th><th>Costo</th><th>Mora origen</th><th>Nueva cuota</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Cuotas</th><th></th></tr></thead>
+            <tbody>{% for r in refinanciaciones %}<tr>
+                <td class="fw-bold">{{ r.cliente }}</td>
+                <td><small>{{ r.origen_descripcion or 'Anterior' }}</small></td>
+                <td>{{ moneda(r.deuda) }}</td>
+                <td>{{ moneda(r.costo_admin) }}</td>
+                <td>{{ r.tuvo_mora_origen }}{% if r.mora_acumulada_origen %}<div class="small text-muted">{{ moneda(r.mora_acumulada_origen) }}</div>{% endif %}</td>
+                <td>{{ moneda(r.cuota) }}</td>
+                <td>{{ moneda(r.total) }}</td>
+                <td>{% if r.estado=='REFINANCIADO' %}<span class="badge-soft-danger">REFINANCIADO</span>{% elif r.estado=='CANCELADO' %}<span class="badge-soft-primary">CANCELADO</span>{% else %}<span class="badge-soft-success">ACTIVA</span>{% endif %}</td>
+                <td>{{ r.fecha }}</td>
+                <td><a class="btn btn-outline-primary btn-sm" href="{{ url_for('cuotas_operacion', tipo='refinanciacion', oid=r.id) }}"><i class="bi bi-list-check me-1"></i>Ver cuotas</a></td>
+                <td><form method="post" action="{{ url_for('eliminar_refinanciacion', rid=r.id) }}" onsubmit="return confirm('¿Eliminar refinanciación?')"><button class="btn-del" type="submit"><i class="bi bi-trash3"></i></button></form></td>
+            </tr>{% endfor %}</tbody>
+        </table>
+    </div>
+    {% else %}<div class="empty-state">No hay refinanciaciones registradas.</div>{% endif %}
+</section>
+
+<script>
+(function(){
+    const elD=document.getElementById('deudaActual'), elC=document.getElementById('costoAdmin'),
+          elI=document.getElementById('interesRef'), elP=document.getElementById('plazoRef');
+    function money(v){ return CRM.currency(v); }
+    function addM(d,m){ const r=new Date(d.getTime()); r.setMonth(r.getMonth()+m); return r.toISOString().slice(0,10); }
+    function calc(){
+        const deuda=CRM.parseMoney(elD.dataset.raw||elD.value),
+              costo=CRM.parseMoney(elC.dataset.raw||elC.value),
+              tasa=CRM.parseDecimal(elI.value), mes=parseInt(elP.value)||0;
+        if(deuda<=0||mes<=0){ document.getElementById('refCuota').textContent=money(0); document.getElementById('refTotal').textContent=money(0); document.getElementById('refGanancia').textContent=money(0); return; }
+        const base=deuda+costo, total=base*(1+tasa/100), gan=total-deuda, cuota=total/mes;
+        document.getElementById('refCuota').textContent=money(cuota);
+        document.getElementById('refTotal').textContent=money(total);
+        document.getElementById('refGanancia').textContent=money(gan);
+        document.getElementById('refPrintDeuda').textContent=money(deuda);
+        document.getElementById('refPrintCuota').textContent=money(cuota);
+        document.getElementById('refPrintTotal').textContent=money(total);
+        let saldo=total, rows=''; const bd=new Date();
+        for(let i=1;i<=mes;i++){ saldo=Math.max(0,saldo-cuota); rows+=`<tr><td><span class="badge-soft-primary">${i}</span></td><td>${addM(bd,i)}</td><td class="fw-bold">${money(cuota)}</td><td>${money(saldo)}</td></tr>`; }
+        document.getElementById('refCuoteroBody').innerHTML=rows;
+    }
+    [elD,elC,elI,elP].forEach(e=>{ if(e){ e.addEventListener('input',calc); e.addEventListener('money-change',calc); }});
+    document.addEventListener('crm:pending-operation-change', calc);
+    calc();
+    // Wire operacion select into deudaActual
+    const opSel = document.getElementById('operacionPendiente');
+    if(opSel){ opSel.addEventListener('change', function(){
+        document.dispatchEvent(new Event('crm:pending-operation-change'));
+    }); }
+})();
+</script>
+{% endblock %}

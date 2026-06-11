@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Ventas | {{ APP_NAME }}{% endblock %}
+{% block page_title %}Registro de ventas{% endblock %}
+{% block page_description %}Control de productos vendidos a clientes, validando riesgo y margen mínimo de pago.{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <section class="panel">
+            <div class="panel-header"><h2 class="panel-title">Nueva venta</h2></div>
+            <form method="post" class="row g-3">
+                {% include "_cliente_selector.html" %}
+                <div class="col-12"><label class="form-label">Producto</label><input class="form-control" name="producto" placeholder="Producto vendido" required></div>
+                <div class="col-12"><label class="form-label">Precio (Gs.)</label><input class="form-control" type="text" data-money="true" name="precio" placeholder="Ej.: 250.000" required></div>
+                <div class="col-12"><label class="check-line"><input type="checkbox" name="autorizar_excepcion" value="SI"><span>Autorizar excepción si el cliente no cumple el margen mínimo de pago.</span></label></div>
+                <div class="col-12 d-grid"><button class="btn btn-primary" type="submit" {% if not clientes %}disabled{% endif %}><i class="bi bi-cart-check me-2"></i>Guardar venta</button></div>
+            </form>
+        </section>
+        {% include "_pendientes_cliente.html" %}
+        {% include "_cliente_rapido.html" %}
+    </div>
+    <div class="col-lg-8">
+        <section class="panel">
+            <div class="panel-header"><h2 class="panel-title">Ventas cargadas</h2><span class="badge-soft-primary">{{ ventas|length }} registros</span></div>
+            {% if ventas %}
+            <div class="table-wrap">
+                <table class="table table-hover">
+                    <thead><tr><th>Cliente</th><th>Producto</th><th>Precio</th><th>Interés</th><th>Cuotas</th><th>Cuota</th><th>Total</th><th>Saldo</th><th>Estado</th><th>Fecha</th><th>Cobro</th><th></th></tr></thead>
+                    <tbody>{% for v in ventas %}<tr>
+                        <td class="fw-bold">{{ v.cliente }}</td>
+                        <td>{{ v.producto }}</td>
+                        <td>{{ moneda(v.precio) }}</td>
+                        <td>{{ porcentaje(v.interes) if v.interes else '—' }}</td>
+                        <td>{{ v.plazo if v.plazo and v.plazo > 1 else 'Contado' }}</td>
+                        <td>{{ moneda(v.cuota) if v.cuota and v.plazo and v.plazo > 1 else '—' }}</td>
+                        <td>{{ moneda(v.total) if v.total else moneda(v.precio) }}</td>
+                        <td>{{ moneda([(v.total or v.precio)|float - v.pagado|float, 0]|max) }}</td>
+                        <td>{% if v.estado=='REFINANCIADO' %}<span class="badge-soft-danger">REFINANCIADO</span>{% elif v.estado=='CANCELADO' %}<span class="badge-soft-primary">CANCELADO</span>{% else %}<span class="badge-soft-success">ACTIVA</span>{% endif %}</td>
+                        <td>{{ v.fecha }}</td>
+                        <td><a class="btn btn-outline-primary btn-sm" href="{{ url_for('cuotas_operacion', tipo='venta', oid=v.id) }}"><i class="bi bi-receipt me-1"></i>Cobrar</a></td>
+                        <td><form method="post" action="{{ url_for('eliminar_venta', vid=v.id) }}" onsubmit="return confirm('¿Eliminar esta venta?')"><button class="btn-del" type="submit"><i class="bi bi-trash3"></i></button></form></td>
+                    </tr>{% endfor %}</tbody>
+                </table>
+            </div>
+            {% else %}<div class="empty-state">No hay ventas registradas.</div>{% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

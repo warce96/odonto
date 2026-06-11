@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Inicio | {{ APP_NAME }}{% endblock %}
+{% block page_title %}Dashboard principal{% endblock %}
+{% block page_description %}Resumen ejecutivo de créditos, refinanciaciones, riesgo, utilidad estimada y alertas de vencimiento.{% endblock %}
+{% block content %}
+<section class="stat-grid">
+    <div class="stat-card"><div class="stat-label">Clientes registrados</div><div class="stat-value">{{ stats.clientes }}</div><div class="stat-note">Base activa del CRM</div></div>
+    <div class="stat-card"><div class="stat-label">Préstamos cargados</div><div class="stat-value">{{ stats.prestamos }}</div><div class="stat-note">Capital: {{ stats.total_prestamos }}</div></div>
+    <div class="stat-card stat-highlight"><div class="stat-label">Utilidad estimada</div><div class="stat-value text-success">{{ stats.utilidad_total }}</div><div class="stat-note">Préstamos + refinanciaciones</div></div>
+    <div class="stat-card"><div class="stat-label">Riesgo total pendiente</div><div class="stat-value text-danger">{{ stats.saldo_pendiente }}</div><div class="stat-note">{{ stats.pendientes }} operaciones activas</div></div>
+    <div class="stat-card"><div class="stat-label">Alertas vencimiento</div><div class="stat-value text-danger">{{ stats.alertas_vencimiento }}</div><div class="stat-note">Vencidas: {{ stats.vencidos }}</div></div>
+</section>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <section class="panel h-100">
+            <div class="panel-header"><h2 class="panel-title">Utilidad por módulo</h2><span class="badge-soft-success">Ganancia</span></div>
+            <div class="profit-list">
+                <div class="profit-item"><span>Préstamos</span><strong>{{ stats.utilidad_prestamos }}</strong></div>
+                <div class="profit-item"><span>Refinanciaciones</span><strong>{{ stats.utilidad_refinanciaciones }}</strong></div>
+                <div class="profit-item total"><span>Total estimado</span><strong>{{ stats.utilidad_total }}</strong></div>
+            </div>
+        </section>
+    </div>
+    <div class="col-lg-8">
+        <section class="panel h-100">
+            <div class="panel-header"><h2 class="panel-title">Accesos rápidos</h2><span class="badge-soft-primary">Operación diaria</span></div>
+            <div class="actions-grid">
+                <a class="action-card" href="{{ url_for('clientes') }}"><div class="action-icon"><i class="bi bi-person-plus-fill"></i></div><h3 class="action-title">Clientes</h3><p class="action-text">Datos, margen, límite, riesgo y alertas.</p></a>
+                <a class="action-card" href="{{ url_for('prestamos') }}"><div class="action-icon"><i class="bi bi-cash-stack"></i></div><h3 class="action-title">Préstamos</h3><p class="action-text">Simular cuotero, validar riesgo y registrar crédito.</p></a>
+                <a class="action-card" href="{{ url_for('refinanciaciones') }}"><div class="action-icon"><i class="bi bi-arrow-repeat"></i></div><h3 class="action-title">Refinanciación</h3><p class="action-text">Refinanciar deuda existente y marcar origen.</p></a>
+                <a class="action-card" href="{{ url_for('ventas') }}"><div class="action-icon"><i class="bi bi-bag-check-fill"></i></div><h3 class="action-title">Ventas</h3><p class="action-text">Controlar electrodomésticos y margen del cliente.</p></a>
+                <a class="action-card" href="{{ url_for('cheques') }}"><div class="action-icon"><i class="bi bi-receipt"></i></div><h3 class="action-title">Cheques</h3><p class="action-text">Calcular descuento y monto neto.</p></a>
+                <a class="action-card" href="{{ url_for('catalogo') }}"><div class="action-icon"><i class="bi bi-grid-3x3-gap"></i></div><h3 class="action-title">Catálogo</h3><p class="action-text">Essen y Tupi — productos para cotizar.</p></a>
+            </div>
+        </section>
+    </div>
+</div>
+
+<div class="row g-4 mt-0">
+    <div class="col-xl-7">
+        <section class="panel h-100">
+            <div class="panel-header"><h2 class="panel-title">Alertas de vencimiento</h2><span class="badge-soft-danger">Próximos 7 días</span></div>
+            {% if alertas %}
+            <div class="table-wrap">
+                <table class="table table-hover">
+                    <thead><tr><th>Cliente</th><th>Tipo</th><th>Vencimiento</th><th>Estado</th><th>Saldo</th></tr></thead>
+                    <tbody>
+                        {% for a in alertas %}<tr>
+                            <td class="fw-bold">{{ a.cliente }}</td><td>{{ a.tipo }}</td><td>{{ a.vencimiento }}</td>
+                            <td><span class="badge-soft-danger">{{ a.estado }}</span><div class="small text-muted">{{ a.dias }} días</div></td>
+                            <td>{{ a.saldo_fmt }}</td>
+                        </tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}<div class="empty-state">No hay cuotas próximas a vencer.</div>{% endif %}
+        </section>
+    </div>
+    <div class="col-xl-5">
+        <section class="panel h-100">
+            <div class="panel-header"><h2 class="panel-title">Riesgo por cliente</h2><span class="badge-soft-primary">Control de margen</span></div>
+            {% if clientes_riesgo %}
+            <div class="risk-list">
+                {% for item in clientes_riesgo %}{% set p = item.perfil %}
+                <div class="risk-list-item">
+                    <div><strong>{{ item.cliente.nombre }}</strong><div class="text-muted small">CI {{ numero(item.cliente.cedula) }} · margen {{ p.margen_fmt }}</div></div>
+                    <div class="text-end"><strong>{{ p.riesgo_fmt }}</strong>
+                        {% if p.habilitado %}<div class="text-success small">Habilitado</div>{% else %}<div class="text-danger small">Debe pagar {{ p.pago_necesario_fmt }}</div>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}<div class="empty-state">No hay clientes registrados.</div>{% endif %}
+        </section>
+    </div>
+</div>
+
+<section class="panel mt-4">
+    <div class="panel-header"><h2 class="panel-title">Operaciones pendientes</h2><span class="badge-soft-primary">Préstamos, refinanciaciones y ventas activas</span></div>
+    {% if operaciones_pendientes %}
+    <div class="table-wrap">
+        <table class="table table-hover">
+            <thead><tr><th>Cliente</th><th>Tipo</th><th>Detalle</th><th>Saldo</th><th>Pagado</th><th>Fecha</th><th>Vencimiento</th><th>Cuotas</th></tr></thead>
+            <tbody>
+                {% for op in operaciones_pendientes %}<tr>
+                    <td class="fw-bold">{{ op.cliente }}</td>
+                    <td><span class="badge-soft-primary">{{ op.tipo_label }}</span></td>
+                    <td>{{ op.descripcion }}<div class="text-muted small">{{ op.detalle }}</div></td>
+                    <td class="fw-bold">{{ op.saldo_fmt }}</td>
+                    <td>{{ op.pagado_fmt }}</td>
+                    <td>{{ op.fecha or '—' }}</td>
+                    <td>{{ op.vencimiento or '—' }}</td>
+                    <td><a class="btn btn-outline-primary btn-sm" href="{{ url_for('cuotas_operacion', tipo=op.tipo, oid=op.indice) }}">Cobrar</a></td>
+                </tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}<div class="empty-state">No hay operaciones pendientes.</div>{% endif %}
+</section>
+{% endblock %}

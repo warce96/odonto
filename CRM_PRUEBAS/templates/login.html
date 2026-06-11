@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Iniciar sesión — {{ APP_NAME }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #163b73;
+            --accent:  #c81e35;
+        }
+        * { box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            font-family: Inter, system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f2a52 0%, #1e4d8c 50%, #163b73 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .login-wrap {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        /* Logo / marca */
+        .brand-block {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .brand-logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            border-radius: 22px;
+            background: rgba(255,255,255,.15);
+            box-shadow: 0 0 0 2px rgba(255,255,255,.25), 0 16px 40px rgba(0,0,0,.25);
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -.03em;
+            margin-bottom: 16px;
+        }
+
+        .brand-name {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fff;
+            margin: 0;
+            letter-spacing: -.03em;
+        }
+
+        .brand-tagline {
+            color: rgba(255,255,255,.65);
+            font-size: .92rem;
+            margin: 4px 0 0;
+        }
+
+        /* Card */
+        .login-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 36px;
+            box-shadow: 0 24px 64px rgba(0,0,0,.22);
+        }
+
+        .login-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 6px;
+        }
+
+        .login-subtitle {
+            color: #64748b;
+            font-size: .88rem;
+            margin: 0 0 28px;
+        }
+
+        .form-label {
+            font-weight: 700;
+            font-size: .88rem;
+            color: #334155;
+        }
+
+        .form-control {
+            border-radius: 12px;
+            min-height: 46px;
+            border-color: #dbe3ef;
+            font-size: .95rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 .2rem rgba(22,59,115,.12);
+        }
+
+        .input-icon {
+            position: relative;
+        }
+
+        .input-icon .bi {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 1rem;
+            z-index: 5;
+        }
+
+        .input-icon .form-control {
+            padding-left: 40px;
+        }
+
+        .btn-login {
+            background: var(--primary);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 800;
+            font-size: 1rem;
+            min-height: 48px;
+            width: 100%;
+            transition: .2s;
+        }
+
+        .btn-login:hover {
+            background: #0f2a52;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(22,59,115,.3);
+        }
+
+        .error-box {
+            background: rgba(200,30,53,.08);
+            border: 1px solid rgba(200,30,53,.2);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #a5162b;
+            font-size: .88rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .default-hint {
+            margin-top: 20px;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: .82rem;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .default-hint code {
+            background: #e2e8f0;
+            border-radius: 6px;
+            padding: 2px 6px;
+            font-family: monospace;
+            color: #334155;
+        }
+
+        .footer-note {
+            text-align: center;
+            color: rgba(255,255,255,.45);
+            font-size: .78rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrap">
+        <div class="brand-block">
+            <div class="brand-logo">{{ APP_INITIALS }}</div>
+            <h1 class="brand-name">{{ APP_NAME }}</h1>
+            <p class="brand-tagline">{{ APP_TAGLINE }}</p>
+        </div>
+
+        <div class="login-card">
+            <h2 class="login-title">Bienvenido</h2>
+            <p class="login-subtitle">Ingresá tus credenciales para continuar</p>
+
+            {% if error %}
+            <div class="error-box">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="post" autocomplete="off">
+                <div class="mb-3">
+                    <label class="form-label">Usuario</label>
+                    <div class="input-icon">
+                        <i class="bi bi-person"></i>
+                        <input type="text" name="username" class="form-control"
+                               placeholder="Ingresá tu usuario" required autofocus>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Contraseña</label>
+                    <div class="input-icon">
+                        <i class="bi bi-lock"></i>
+                        <input type="password" name="password" class="form-control"
+                               placeholder="••••••••" required>
+                    </div>
+                </div>
+                <button class="btn-login" type="submit">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Ingresar
+                </button>
+            </form>
+
+            <div class="default-hint">
+                <i class="bi bi-info-circle me-1"></i>
+                Acceso inicial: usuario <code>admin</code> — contraseña <code>admin123</code>
+            </div>
+        </div>
+
+        <p class="footer-note">© 2025 {{ APP_NAME }} — Uso interno</p>
+    </div>
+</body>
+</html>

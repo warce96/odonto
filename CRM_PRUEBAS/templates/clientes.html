@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Clientes | {{ APP_NAME }}{% endblock %}
+{% block page_title %}Registro y riesgo de clientes{% endblock %}
+{% block page_description %}Datos, margen mínimo de pago, límite de crédito, riesgo actual y alertas.{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <section class="panel">
+            <div class="panel-header"><h2 class="panel-title">Nuevo cliente</h2></div>
+            <form method="post" class="row g-3">
+                <div class="col-12"><label class="form-label">Nombre completo</label><input class="form-control" name="nombre" placeholder="Ej.: Juan Pérez" required></div>
+                <div class="col-md-6"><label class="form-label">Cédula</label><input class="form-control" name="cedula" placeholder="Ej.: 1234567" required></div>
+                <div class="col-md-6"><label class="form-label">Teléfono</label><input class="form-control" name="telefono" placeholder="Ej.: 0981 000 000"></div>
+                <div class="col-12"><label class="form-label">Dirección</label><input class="form-control" name="direccion" placeholder="Calle o referencia principal"></div>
+                <div class="col-md-6"><label class="form-label">Barrio / ciudad</label><input class="form-control" name="barrio" placeholder="Ej.: San Lorenzo"></div>
+                <div class="col-md-6"><label class="form-label">Correo</label><input class="form-control" name="correo" type="email" placeholder="cliente@email.com"></div>
+                <div class="col-12"><label class="form-label">Referencia personal</label><input class="form-control" name="referencia" placeholder="Nombre y teléfono de referencia"></div>
+                <div class="col-md-6">
+                    <label class="form-label">Margen mínimo de pago %</label>
+                    <input class="form-control" name="margen_pago" type="number" step="0.01" min="0" max="100" placeholder="Ej.: 50">
+                    <div class="form-text">% pagado para habilitar nuevo crédito.</div>
+                </div>
+                <div class="col-md-6"><label class="form-label">Límite de crédito</label><input class="form-control" data-money="true" name="limite_credito" placeholder="Ej.: 5.000.000"></div>
+                <div class="col-12"><label class="form-label">Observación</label><textarea class="form-control" name="observacion" rows="2" placeholder="Notas internas sobre el cliente"></textarea></div>
+                <div class="col-12 d-grid"><button class="btn btn-primary" type="submit"><i class="bi bi-save me-2"></i>Guardar cliente</button></div>
+            </form>
+        </section>
+    </div>
+    <div class="col-lg-8">
+        <section class="panel">
+            <div class="panel-header"><h2 class="panel-title">Clientes cargados</h2><span class="badge-soft-primary">{{ clientes|length }} registros</span></div>
+            {% if clientes %}
+            <div class="table-wrap">
+                <table class="table table-hover">
+                    <thead><tr><th>Cliente</th><th>Contacto</th><th>Margen</th><th>Riesgo actual</th><th>Pagado</th><th>Estado</th><th>Alertas</th><th></th></tr></thead>
+                    <tbody>
+                        {% for item in clientes %}{% set c = item.cliente %}{% set p = item.perfil %}
+                        <tr>
+                            <td><strong>{{ c.nombre }}</strong><div class="text-muted small">CI {{ numero(c.cedula) }}</div>{% if c.direccion or c.barrio %}<div class="text-muted small">{{ c.direccion }} {{ c.barrio }}</div>{% endif %}</td>
+                            <td>{{ c.telefono or '—' }}{% if c.email %}<div class="text-muted small">{{ c.email }}</div>{% endif %}</td>
+                            <td>{{ p.margen_fmt }}</td>
+                            <td class="fw-bold">{{ p.riesgo_fmt }}</td>
+                            <td>{{ p.pagado_fmt }}<div class="text-muted small">{{ p.porcentaje_pagado_fmt }}</div></td>
+                            <td>
+                                {% if p.habilitado %}<span class="badge-soft-success">Habilitado</span>
+                                {% else %}<span class="badge-soft-danger">Debe pagar {{ p.pago_necesario_fmt }}</span>{% endif %}
+                                {% if p.excede_limite %}<div class="text-danger small mt-1">Supera límite {{ p.limite_credito_fmt }}</div>{% endif %}
+                            </td>
+                            <td>
+                                {% if item.alertas %}{% for a in item.alertas[:2] %}<div><span class="badge-soft-danger">{{ a.estado }}</span><div class="small text-muted">{{ a.tipo }} · {{ a.vencimiento }}</div></div>{% endfor %}
+                                {% else %}<span class="text-muted">Sin alertas</span>{% endif %}
+                            </td>
+                            <td>
+                                <form method="post" action="{{ url_for('eliminar_cliente', cid=c.id) }}" onsubmit="return confirm('¿Eliminar a {{ c.nombre }}?')">
+                                    <button class="btn-del" type="submit" title="Eliminar"><i class="bi bi-trash3"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}<div class="empty-state">No hay clientes registrados.</div>{% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Agendamientos ETLs</title>
+
+
+<link rel="stylesheet" href="/static/style.css">
+
+<style>
+
+.cron-box{
+
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 4px 10px rgba(0,0,0,0.08);
+
+}
+
+.search{
+
+margin-bottom:15px;
+
+}
+
+.search input{
+
+padding:8px;
+width:300px;
+border:1px solid #ccc;
+border-radius:5px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="viewer-container">
+
+<h2>Programación ETL (Crontab)</h2>
+
+<div class="panel" style="margin-bottom:20px">
+
+<b>Tips operativos</b>
+
+<ul>
+
+<li>Las tareas entre <b>06:00 y 08:00</b> suelen ser cargas principales.</li>
+
+<li>Los procesos con frecuencia <b>cada 5 minutos</b> suelen ser monitoreo o logs.</li>
+
+<li>Las tareas nocturnas después de <b>22:00</b> suelen ser cargas masivas.</li>
+
+<li>Si un proceso no aparece en el monitor ETL, puede que no se haya ejecutado.</li>
+
+<li>Errores repetidos en un mismo proceso deben revisarse en el log ETL.</li>
+
+</ul>
+
+</div>
+<a href="/">← Volver</a>
+
+<br><br>
+
+<div class="search">
+
+<input type="text" id="searchCron" placeholder="Buscar tarea...">
+
+</div>
+
+<div class="cron-box">
+
+<table id="cronTable">
+
+<tr>
+
+<th>Cron</th>
+<th>Descripción</th>
+<th>User</th>
+<th>Comando</th>
+
+</tr>
+
+{% for r in rows %}
+
+<tr>
+
+<td>{{r.schedule}}</td>
+
+<td style="color:#1e40af;font-weight:600">
+{{r.schedule_text}}
+</td>
+
+<td>{{r.user}}</td>
+
+<td style="font-family:monospace">
+{{r.command}}
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+</div>
+
+<script>
+
+const search = document.getElementById("searchCron")
+
+search.addEventListener("keyup",function(){
+
+let filter = this.value.toLowerCase()
+
+let rows = document.querySelectorAll("#cronTable tr")
+
+rows.forEach((row,i)=>{
+
+if(i==0) return
+
+let text = row.innerText.toLowerCase()
+
+row.style.display = text.includes(filter) ? "" : "none"
+
+})
+
+})
+
+</script>
+
+</body>
+
+</html>

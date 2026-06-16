@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<title>Pentaho Explorer</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="topbar">
+<div class="brand">ETL Governance Portal - Pentaho (Transformaciones / Jobs / Pthyton)</div>
+</div>
+
+<div class="layout">
+
+<aside class="sidebar">
+<div class="panel">
+<div class="panel-title">Estructura de carpetas</div>
+<div id="tree" class="tree"></div>
+</div>
+</aside>
+
+<main class="content">
+
+<div class="panel hero">
+
+<div class="hero-title">
+Explorador centralizado de transformaciones, jobs y scripts
+</div>
+
+<div class="hero-subtitle">
+Busca tablas, SQL, steps, procesos, jobs o scripts Python
+</div>
+
+<div class="filter-row">
+<label><input type="checkbox" class="type-filter" value="ktr" checked> Transformaciones</label>
+<label><input type="checkbox" class="type-filter" value="kjb" checked> Jobs</label>
+<label><input type="checkbox" class="type-filter" value="py" checked> Python</label>
+</div>
+
+<div class="search-row">
+<input id="search" type="text" placeholder="Buscar tabla, SQL, step, job, función Python...">
+<button onclick="buscar()">Buscar</button>
+
+<a href="/etl">
+<button>Tareas ejecutadas</button>
+</a>
+<a href="/crontab">
+<button>Programación ETL</button>
+</a>
+</div>
+
+<div id="loadingBox" class="loading-box" style="display:none">
+<div class="spinner"></div>
+<div>
+<div class="loading-title">Buscando en ETL...</div>
+<div class="loading-subtitle">
+La búsqueda está en curso
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="stats-strip stats-strip-2">
+
+<div class="stat-card">
+<div class="stat-value" id="totalResults">0</div>
+<div class="stat-label">Resultados</div>
+</div>
+
+<div class="stat-card">
+
+<div class="api-status">
+
+<span class="status-dot"></span>
+
+<span class="status-text">API ONLINE</span>
+
+</div>
+
+<div class="stat-label">Motor ETL activo</div>
+
+</div>
+
+<div class="stat-card">
+<div class="stat-value" id="elapsedMs">0 s</div>
+<div class="stat-label">Tiempo</div>
+</div>
+
+</div>
+
+<div class="panel">
+
+<div class="panel-title">Resultados de búsqueda</div>
+
+<div class="table-wrap">
+
+<table id="resultsTable">
+
+<thead>
+<tr>
+<th>Archivo</th>
+<th>Ruta</th>
+<th>Tipo</th>
+<th>Acción</th>
+<th>Documentación</th>
+</tr>
+</thead>
+
+<tbody id="resultsBody">
+<tr>
+<td colspan="5" class="empty-cell">
+Escribe al menos 2 caracteres para buscar
+</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+<script>
+const searchInput = document.getElementById("search");
+const loadingBox = document.getElementById("loadingBox");
+const resultsBody = document.getElementById("resultsBody");
+const totalResults = document.getElementById("totalResults");
+const elapsedMs = document.getElementById("elapsedMs");
+const typeFilters = document.querySelectorAll(".type-filter");
+
+function showLoading() {
+  loadingBox.style.display = "flex";
+  resultsBody.innerHTML = `
+    <tr>
+      <td colspan="5" class="empty-cell">
+        🔎 Buscando en los ETL...
+      </td>
+    </tr>
+  `;
+}
+
+function hideLoading() {
+  loadingBox.style.display = "none";
+}
+
+function highlight(text, search) {
+  if (!search) return text;
+
+  const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp("(" + escaped + ")", "gi");
+
+  return String(text).replace(regex, "<span class='highlight'>$1</span>");
+}
+
+function getSelectedTypes() {
+  const types = [];
+  typeFilters.forEach(f => {
+    if (f.checked) types.push(f.value);
+  });
+  return types;
+}
+
+async function buscar() {
+  const q = searchInput.value.trim();
+
+  if (q.length < 2) {
+    resultsBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="empty-cell">
+          Escribe al menos 2 caracteres para buscar
+        </td>
+      </tr>
+    `;
+    totalResults.textContent = "0";
+    elapsedMs.textContent = "0 s";
+    return;
+  }
+
+  const types = getSelectedTypes();
+
+  showLoading();
+
+  const res = await fetch(
+    "/search?q=" + encodeURIComponent(q) + "&types=" + encodeURIComponent(types.join(","))
+  );
+
+  const payload = await res.json();
+  const data = payload.results || [];
+  const seconds = (payload.elapsed_ms / 1000).toFixed(2);
+
+  elapsedMs.textContent = seconds + " s";
+  totalResults.textContent = payload.count || 0;
+
+  hideLoading();
+
+  if (!data.length) {
+    resultsBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="empty-cell">
+          No se encontraron resultados
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  resultsBody.innerHTML = data.map(r => `
+    <tr>
+      <td>${highlight(r.archivo, q)}</td>
+      <td>${highlight(r.ruta, q)}</td>
+      <td><span class="badge neutral">${r.tipo.toUpperCase()}</span></td>
+      <td>
+        <a class="open-btn"
+           href="/open?path=${encodeURIComponent(r.path)}&q=${encodeURIComponent(q)}"
+           target="_blank">
+           Ver
+        </a>
+      </td>
+      <td>
+        <a class="catalog-btn"
+           href="/catalog?path=${encodeURIComponent(r.path)}"
+           target="_blank">
+           Catálogo
+        </a>
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function loadTree() {
+  const res = await fetch("/api/tree");
+  const data = await res.json();
+  document.getElementById("tree").innerHTML = renderTree(data);
+}
+
+function renderTree(node) {
+  if (!node) return "";
+
+  if (node.type === "folder") {
+    const children = (node.children || []).map(renderTree).join("");
+
+    return `
+      <div class="tree-node">
+        <details open>
+          <summary class="folder-node">${node.name}</summary>
+          <div class="tree-children">
+            ${children}
+          </div>
+        </details>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="tree-file">
+      <a href="/open?path=${encodeURIComponent(node.path)}" target="_blank">
+        ${node.name}
+      </a>
+    </div>
+  `;
+}
+
+searchInput.addEventListener("keyup", function(e) {
+  if (e.key === "Enter") {
+    buscar();
+  }
+});
+
+loadTree();
+</script>
+
+</body>
+</html>

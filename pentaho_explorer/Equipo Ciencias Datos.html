@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLOps - Buenas prácticas, políticas y estructuración de archivos</title>
+
+<style>
+    body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #f8fafc;
+        margin: 0;
+        padding: 40px;
+        color: #1f2937;
+    }
+
+    .container {
+        max-width: 1180px;
+        margin: auto;
+    }
+
+    .top-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+    }
+
+    .pdf-button {
+        background: #1e3a8a;
+        color: white;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        transition: 0.2s ease;
+    }
+
+    .pdf-button:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    .hero {
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        color: white;
+        padding: 35px;
+        border-radius: 18px;
+        box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+        margin-bottom: 30px;
+    }
+
+    .hero h1 {
+        margin: 0 0 10px 0;
+        font-size: 32px;
+    }
+
+    .hero p {
+        margin: 0;
+        line-height: 1.8;
+        font-size: 16px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+        border: 1px solid #e2e8f0;
+        page-break-inside: avoid;
+    }
+
+    h2 {
+        margin-top: 0;
+        color: #0f172a;
+        font-size: 24px;
+    }
+
+    h3 {
+        color: #1e3a8a;
+        margin-bottom: 10px;
+        font-size: 18px;
+    }
+
+    p {
+        line-height: 1.75;
+        margin: 0 0 12px 0;
+    }
+
+    ul {
+        margin: 0;
+        padding-left: 22px;
+    }
+
+    ul li {
+        margin-bottom: 10px;
+        line-height: 1.7;
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+    }
+
+    .box {
+        background: #f8fafc;
+        border-left: 6px solid #2563eb;
+        padding: 18px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    }
+
+    .box.green { border-left-color: #10b981; }
+    .box.orange { border-left-color: #f59e0b; }
+    .box.red { border-left-color: #ef4444; }
+
+    .highlight {
+        background: #eff6ff;
+        border-left: 6px solid #2563eb;
+        padding: 16px 18px;
+        border-radius: 10px;
+        margin-top: 15px;
+        line-height: 1.7;
+    }
+
+    .warning {
+        background: #fff7ed;
+        border-left: 6px solid #f59e0b;
+        padding: 16px 18px;
+        border-radius: 10px;
+        margin-top: 15px;
+        line-height: 1.7;
+    }
+
+    .success {
+        background: #ecfdf5;
+        border-left: 6px solid #10b981;
+        padding: 16px 18px;
+        border-radius: 10px;
+        margin-top: 15px;
+        line-height: 1.7;
+    }
+
+    .code-block {
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 20px;
+        border-radius: 14px;
+        overflow-x: auto;
+        margin-top: 15px;
+        font-family: Consolas, monospace;
+        font-size: 14px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+    }
+
+    .flow {
+        background: #eef2ff;
+        border-radius: 14px;
+        padding: 22px;
+        text-align: center;
+        line-height: 2;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .footer {
+        margin-top: 28px;
+        background: #0f172a;
+        color: white;
+        padding: 28px;
+        border-radius: 16px;
+        text-align: center;
+        line-height: 1.8;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        background: white;
+        overflow: hidden;
+        border-radius: 12px;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 14px;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: top;
+    }
+
+    th {
+        background: #eff6ff;
+        color: #1e3a8a;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    @media (max-width: 768px) {
+        body {
+            padding: 20px;
+        }
+
+        .hero h1 {
+            font-size: 26px;
+        }
+
+        .top-actions {
+            justify-content: center;
+        }
+    }
+
+    @media print {
+        body {
+            background: white;
+            padding: 0;
+        }
+
+        .top-actions {
+            display: none !important;
+        }
+
+        .container {
+            max-width: 100%;
+        }
+
+        .card, .hero, .footer {
+            box-shadow: none;
+            border: 1px solid #d1d5db;
+        }
+
+        .hero {
+            background: #1e3a8a !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color: white !important;
+        }
+
+        .highlight, .warning, .success, th {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+    }
+</style>
+
+<script>
+    function exportarPDF() {
+        window.print();
+    }
+</script>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="top-actions">
+        <button class="pdf-button" onclick="exportarPDF()">Exportar a PDF</button>
+    </div>
+
+    <div class="hero">
+        <h1>MLOps - Buenas prácticas, políticas y estructuración de archivos</h1>
+        <p>
+            Documento base para establecer lineamientos iniciales del proyecto MLOps, enfocado en la adopción de
+            buenas prácticas por parte del equipo de Ciencia de Datos, la formalización de políticas de trabajo y
+            la estructuración mínima de archivos para lograr una ejecución reproducible, controlada y escalable.
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>Objetivo de esta etapa</h2>
+        <p>
+            En esta fase inicial del proyecto MLOps se busca establecer una base técnica y operativa común para el
+            desarrollo, validación y posterior paso de modelos analíticos y de Machine Learning entre entornos.
+        </p>
+        <div class="highlight">
+            El foco actual no está en la automatización completa del pipeline, sino en la estandarización del trabajo
+            del equipo, la formalización de entregables y la preparación para una ejecución controlada en servidor.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Principios rectores</h2>
+        <div class="grid-3">
+            <div class="box">
+                <h3>Reproducibilidad</h3>
+                <p>Un mismo modelo debe producir resultados consistentes bajo las mismas condiciones de entrada.</p>
+            </div>
+            <div class="box green">
+                <h3>Trazabilidad</h3>
+                <p>Todo modelo debe poder asociarse a una versión, responsable, fecha y conjunto de dependencias.</p>
+            </div>
+            <div class="box orange">
+                <h3>Control</h3>
+                <p>La ejecución en ambientes controlados debe prevalecer sobre prácticas manuales o no auditables.</p>
+            </div>
+            <div class="box red">
+                <h3>Separación de ambientes</h3>
+                <p>Desarrollo, validación y producción deben mantenerse formalmente separados.</p>
+            </div>
+            <div class="box">
+                <h3>Estandarización</h3>
+                <p>Todos los proyectos deben seguir una estructura mínima común de carpetas, archivos y documentación.</p>
+            </div>
+            <div class="box green">
+                <h3>Escalabilidad</h3>
+                <p>La base definida debe permitir evolucionar a futuro hacia automatización, monitoreo y gobierno de modelos.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Buenas prácticas a ser adoptadas por el equipo de Ciencia de Datos</h2>
+        <div class="grid-2">
+            <div>
+                <h3>Desarrollo del modelo</h3>
+                <ul>
+                    <li>Separar claramente el código exploratorio del código de ejecución formal.</li>
+                    <li>Evitar dependencias implícitas del entorno local.</li>
+                    <li>Documentar supuestos, variables de entrada y salidas del modelo.</li>
+                    <li>Nombrar archivos y carpetas con una convención uniforme.</li>
+                    <li>Utilizar notebooks para análisis y exploración, pero no como entregable principal de ejecución.</li>
+                    <li>Pasar la lógica final a scripts estructurados y reutilizables.</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Gestión del trabajo analítico</h3>
+                <ul>
+                    <li>Declarar dependencias en <strong>requirements.txt</strong>.</li>
+                    <li>Controlar versiones del código fuente en repositorio.</li>
+                    <li>Evitar cambios manuales no documentados en scripts compartidos.</li>
+                    <li>Registrar parámetros y configuraciones relevantes del modelo.</li>
+                    <li>Incluir archivos de configuración externos cuando corresponda.</li>
+                    <li>Entregar el desarrollo con documentación funcional y técnica mínima.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="success">
+            La buena práctica central de esta etapa es transformar el trabajo analítico en un entregable técnico
+            estructurado, portable y entendible por otros equipos.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Políticas iniciales a adoptar</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Política</th>
+                    <th>Definición</th>
+                    <th>Objetivo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Separación entre desarrollo y ejecución</td>
+                    <td>El desarrollo se realiza localmente; la validación y ejecución formal se realizan en servidor.</td>
+                    <td>Reducir variabilidad y riesgo operativo.</td>
+                </tr>
+                <tr>
+                    <td>Prohibición de ejecución directa en producción</td>
+                    <td>Ningún modelo deberá ejecutarse directamente en PROD sin haber sido validado previamente.</td>
+                    <td>Asegurar control y trazabilidad.</td>
+                </tr>
+                <tr>
+                    <td>Entregable mínimo obligatorio</td>
+                    <td>Todo modelo debe contar al menos con script principal, dependencias y documentación básica.</td>
+                    <td>Homogeneizar la entrega técnica.</td>
+                </tr>
+                <tr>
+                    <td>Control de dependencias</td>
+                    <td>No se permitirán librerías no documentadas ni instalaciones manuales fuera del proceso definido.</td>
+                    <td>Garantizar reproducibilidad.</td>
+                </tr>
+                <tr>
+                    <td>Documentación mínima</td>
+                    <td>El modelo debe incluir descripción funcional, entradas, salidas y supuestos.</td>
+                    <td>Facilitar soporte y continuidad operativa.</td>
+                </tr>
+                <tr>
+                    <td>Paso controlado entre ambientes</td>
+                    <td>Todo paso de DEV a DESA y de DESA a PROD debe gestionarse bajo criterios formales.</td>
+                    <td>Fortalecer el gobierno del ciclo de vida.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Flujo de trabajo esperado en esta etapa</h2>
+        <div class="flow">
+            Ciencia de Datos (DEV)<br>
+            Desarrollo local / notebooks / pruebas analíticas<br>
+            ↓<br>
+            Estructuración del entregable técnico<br>
+            scripts + requirements.txt + documentación<br>
+            ↓<br>
+            Validación en servidor Ubuntu (DESA)<br>
+            preparación técnica por parte del implementador<br>
+            ↓<br>
+            Base lista para paso controlado a producción
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Estructura recomendada de archivos para el equipo de Ciencia de Datos</h2>
+        <p>
+            Para esta etapa, el equipo de Ciencia de Datos debería adoptar una estructura mínima estándar para proyectos
+            analíticos y de Machine Learning. Los notebooks podrán utilizarse para exploración y análisis, pero la
+            lógica final de ejecución deberá estar contenida en scripts estructurados.
+        </p>
+
+        <div class="code-block">proyecto_modelo/
+│
+├── src/
+│   ├── main.py
+│   ├── preprocessing.py
+│   ├── scoring.py
+│   ├── functions.py
+│   └── utils.py
+│
+├── config/
+│   └── config.yaml
+│
+├── notebooks/
+│   └── exploracion_modelo.ipynb
+│
+├── artifacts/
+│   ├── modelo_entrenado.pkl
+│   └── modelo_entrenado.zip
+│
+├── data/
+│   ├── input/
+│   └── output/
+│
+├── tests/
+│   └── test_basico.py
+│
+├── requirements.txt
+├── README.md
+└── .gitignore</div>
+
+        <div class="highlight">
+            El objetivo no es complejizar el trabajo del equipo, sino ordenar el proyecto para que pueda ser entendido,
+            validado y preparado para su implementación en ambientes controlados.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Descripción de archivos y carpetas clave</h2>
+        <div class="grid-2">
+            <div class="box">
+                <h3>src/</h3>
+                <p>Contiene la lógica formal del desarrollo, incluyendo ejecución principal, preprocesamiento, scoring y funciones reutilizables.</p>
+            </div>
+            <div class="box green">
+                <h3>functions.py</h3>
+                <p>Archivo destinado a centralizar funciones de apoyo reutilizables dentro del proyecto.</p>
+            </div>
+            <div class="box orange">
+                <h3>notebooks/</h3>
+                <p>Espacio para exploración, análisis y prototipado. No debe ser el artefacto principal de ejecución formal.</p>
+            </div>
+            <div class="box">
+                <h3>artifacts/</h3>
+                <p>Carpeta para almacenar artefactos del modelo, como archivos entrenados, serializados o empaquetados en formato .zip.</p>
+            </div>
+            <div class="box green">
+                <h3>requirements.txt</h3>
+                <p>Lista formal de dependencias necesarias para ejecutar el proyecto.</p>
+            </div>
+            <div class="box red">
+                <h3>README.md</h3>
+                <p>Documento de referencia rápida con propósito, entradas, salidas y forma de ejecución.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Elementos a cargo del implementador o frente técnico</h2>
+        <ul>
+            <li>Construcción del entorno de ejecución en servidor.</li>
+            <li>Instalación y configuración de Docker en ambiente controlado.</li>
+            <li>Definición y mantenimiento del Dockerfile.</li>
+            <li>Construcción y prueba del contenedor en servidor.</li>
+            <li>Validación técnica del paquete entregado por Ciencia de Datos.</li>
+            <li>Preparación de la base para futuras automatizaciones del pipeline.</li>
+        </ul>
+
+        <div class="highlight">
+            En esta etapa, el Dockerfile no forma parte de las buenas prácticas centrales del equipo de Ciencia de Datos,
+            sino del frente implementador o técnico encargado de la ejecución controlada en servidor.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Responsabilidades del equipo de Ciencia de Datos</h2>
+        <ul>
+            <li>Desarrollar y validar funcionalmente los modelos en entorno local.</li>
+            <li>Estructurar el entregable técnico conforme al estándar definido.</li>
+            <li>Documentar dependencias, supuestos e instrucciones de ejecución.</li>
+            <li>Entregar el modelo preparado para ser implementado y probado en servidor.</li>
+            <li>Corregir observaciones surgidas durante la validación técnica en DESA.</li>
+            <li>Adoptar progresivamente prácticas más cercanas a desarrollo de software productivo.</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Responsabilidades del frente técnico / implementador</h2>
+        <ul>
+            <li>Habilitar Docker en el servidor Ubuntu de validación.</li>
+            <li>Preparar el entorno de ejecución controlado.</li>
+            <li>Construir y ejecutar contenedores en ambiente controlado.</li>
+            <li>Verificar consistencia técnica del entregable.</li>
+            <li>Definir lineamientos mínimos para el paso ordenado entre ambientes.</li>
+            <li>Preparar la base para futuras automatizaciones.</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Prácticas no recomendadas en esta etapa</h2>
+        <div class="grid-2">
+            <div class="warning">
+                <strong>No recomendado:</strong><br>
+                Ejecutar modelos únicamente desde notebooks sin estructuración del código.
+            </div>
+            <div class="warning">
+                <strong>No recomendado:</strong><br>
+                Utilizar notebooks como entregable principal para ambientes controlados.
+            </div>
+            <div class="warning">
+                <strong>No recomendado:</strong><br>
+                Entregar modelos sin documentación básica ni instrucciones de ejecución.
+            </div>
+            <div class="warning">
+                <strong>No recomendado:</strong><br>
+                Depender exclusivamente del entorno local del analista para ejecutar el modelo.
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Evolución esperada en fases posteriores</h2>
+        <ul>
+            <li>Versionado de modelos con herramientas como MLflow.</li>
+            <li>Versionado de datos y features con DVC o solución equivalente.</li>
+            <li>Automatización parcial o total del pipeline.</li>
+            <li>Monitoreo de desempeño y drift de modelos.</li>
+            <li>Mayor formalización de aprobaciones y paso entre entornos.</li>
+        </ul>
+
+        <div class="success">
+            Esta etapa inicial sienta la base de orden, control y disciplina técnica sobre la cual podrá evolucionar
+            el frente de MLOps en el futuro.
+        </div>
+    </div>
+
+    <div class="footer">
+        <strong>Conclusión</strong><br><br>
+        La adopción de buenas prácticas, políticas mínimas y una estructura estándar de archivos permitirá al equipo
+        de Ciencia de Datos trabajar de forma más ordenada y preparada para un esquema MLOps. El objetivo inmediato
+        es lograr entregables reproducibles, trazables y listos para validación técnica en entornos controlados.
+    </div>
+
+</div>
+
+</body>
+</html>

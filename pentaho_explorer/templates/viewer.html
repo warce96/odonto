@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ filename }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">ETL Governance Portal - Pentaho (.ktr / .kjb / .py)</div>
+  </div>
+
+  <div class="viewer-container">
+    <div class="panel hero">
+      <div class="viewer-title">{{ filename }}</div>
+      <div class="viewer-subtitle">{{ file }}</div>
+
+      <div class="mini-search-row">
+        <input id="localSearch" type="text" placeholder="Buscar step, tabla, tipo, sql, función..." oninput="filterRows()">
+        <a class="catalog-btn" href="/catalog?path={{ file | urlencode }}" target="_blank">Ver catálogo</a>
+      </div>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat-card">
+        <div class="stat-value">{{ summary.total_steps or 0 }}</div>
+        <div class="stat-label">
+          {% if ext == '.py' %}Items{% else %}Total Steps{% endif %}
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ summary.sources or 0 }}</div>
+        <div class="stat-label">
+          {% if ext == '.py' %}Imports{% else %}Sources{% endif %}
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ summary.targets or 0 }}</div>
+        <div class="stat-label">
+          {% if ext == '.py' %}Functions{% else %}Targets{% endif %}
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ summary.joins or 0 }}</div>
+        <div class="stat-label">
+          {% if ext == '.py' %}Classes{% else %}Joins{% endif %}
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ dependencies|length if dependencies else 0 }}</div>
+        <div class="stat-label">
+          {% if ext == '.py' %}Dependencias{% else %}Jobs{% endif %}
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ summary.complexity or 'LOW' }}</div>
+        <div class="stat-label">Complejidad</div>
+      </div>
+    </div>
+
+    {% if ext == '.py' %}
+    <div class="viewer-grid">
+      <div class="panel">
+        <div class="panel-title">Imports detectados</div>
+        {% if imports %}
+          <ul class="clean-list">
+            {% for item in imports %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="muted">No detectados</div>
+        {% endif %}
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Funciones</div>
+        {% if functions %}
+          <ul class="clean-list">
+            {% for item in functions %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="muted">No detectadas</div>
+        {% endif %}
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Clases</div>
+        {% if classes %}
+          <ul class="clean-list">
+            {% for item in classes %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="muted">No detectadas</div>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="viewer-grid">
+      <div class="panel">
+        <div class="panel-title">Tablas origen</div>
+        {% if sources %}
+          <ul class="clean-list">
+            {% for item in sources %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="muted">No detectadas</div>
+        {% endif %}
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Tablas destino</div>
+        {% if targets %}
+          <ul class="clean-list">
+            {% for item in targets %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="muted">No detectadas</div>
+        {% endif %}
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Dependencias</div>
+        {% if dependencies %}
+          <ul class="clean-list">
+            {% for item in dependencies %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="muted">Sin dependencias detectadas</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-title">
+        {% if ext == '.py' %}Detalle del script{% else %}Detalle del proceso{% endif %}
+      </div>
+      <div class="table-wrap">
+        <table id="detailTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Elemento</th>
+              <th>Tipo</th>
+              <th>Origen</th>
+              <th>Destino</th>
+              <th>Categoría</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr class="detail-row">
+              <td>{{ row.nro }}</td>
+              <td class="file-cell">{{ row.step }}</td>
+              <td>{{ row.tipo }}</td>
+              <td class="sql-cell">{{ row.origen }}</td>
+              <td>{{ row.destino }}</td>
+              <td>
+                <span class="badge
+                  {% if row.categoria == 'SOURCE' %}source
+                  {% elif row.categoria == 'TARGET' %}target
+                  {% elif row.categoria == 'JOIN' %}join
+                  {% elif row.categoria == 'TRANSFORM' %}transform
+                  {% elif row.categoria == 'JOB' %}job
+                  {% else %}neutral{% endif %}">
+                  {{ row.categoria }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+            {% if not rows %}
+            <tr>
+              <td colspan="6" class="empty-cell">No hay detalle estructurado disponible</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% if ext != '.py' %}
+    <div class="panel">
+      <div class="panel-title">SQL detectado</div>
+      {% if sql_blocks %}
+        {% for item in sql_blocks %}
+          <div class="sql-block">
+            <div class="sql-title">{{ item.step }}</div>
+            <pre>{{ item.sql }}</pre>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="muted">No se detectó SQL estructurado en este archivo.</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-title">
+        {% if ext == '.py' %}Código fuente (vista previa){% else %}Contenido (vista previa){% endif %}
+      </div>
+      <div class="xml-box">
+        <pre>{{ content }}</pre>
+      </div>
+    </div>
+  </div>
+
+<script>
+function filterRows() {
+  const value = document.getElementById("localSearch").value.toLowerCase();
+  const rows = document.querySelectorAll(".detail-row");
+
+  rows.forEach(row => {
+    const text = row.innerText.toLowerCase();
+    row.style.display = text.includes(value) ? "" : "none";
+  });
+}
+</script>
+</body>
+</html>

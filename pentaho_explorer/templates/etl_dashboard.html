@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>ETL Monitor</title>
+
+<link rel="stylesheet" href="/static/style.css">
+
+<style>
+
+.stats{
+display:flex;
+gap:20px;
+margin-bottom:25px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 4px 10px rgba(0,0,0,0.08);
+flex:1;
+text-align:center;
+}
+
+.card h2{
+margin:0;
+font-size:32px;
+}
+
+.ok{color:#2e7d32;}
+.error{color:#c62828;}
+.total{color:#1e40af;}
+
+.searchbox{
+margin-bottom:20px;
+}
+
+.searchbox input{
+padding:10px;
+width:350px;
+border:1px solid #ccc;
+border-radius:6px;
+font-size:14px;
+}
+
+/* ERROR TITILANTE */
+
+.error-blink{
+
+animation: blink 1s infinite;
+
+}
+
+@keyframes blink{
+
+0%{background:#ffdddd}
+50%{background:#ff4d4d;color:white}
+100%{background:#ffdddd}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="viewer-container">
+
+<h2>Monitor ETL – {{today}}</h2>
+
+<a href="/">← Volver</a>
+
+<br><br>
+
+<div class="stats">
+
+<div class="card">
+<h2 class="total">{{total}}</h2>
+Procesos únicos hoy
+</div>
+
+<div class="card">
+<h2 class="ok">{{ok}}</h2>
+Procesos OK
+</div>
+
+<div class="card">
+<h2 class="error">{{error}}</h2>
+Procesos con error
+</div>
+
+</div>
+
+<div class="searchbox">
+
+<input type="text" id="searchProcess"
+placeholder="Buscar proceso, estado o registro...">
+
+</div>
+
+<div class="panel">
+
+<table id="etlTable">
+
+<tr>
+<th>Estado</th>
+<th>Proceso</th>
+<th>Registro</th>
+</tr>
+
+{% for r in rows %}
+
+<tr class="{% if r.estado=='ERROR' %}error-blink{% endif %}">
+
+<td>
+
+{% if r.estado=="OK" %}
+<span class="badge target">OK</span>
+{% else %}
+<span class="badge source">ERROR</span>
+{% endif %}
+
+</td>
+
+<td>{{r.proceso}}</td>
+
+<td style="font-family:monospace">
+
+{{r.line}}
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+</div>
+
+<script>
+
+const searchInput = document.getElementById("searchProcess")
+
+searchInput.addEventListener("keyup",function(){
+
+let filter = this.value.toLowerCase()
+
+let rows = document.querySelectorAll("#etlTable tr")
+
+rows.forEach((row,i)=>{
+
+if(i==0) return
+
+let estado = row.children[0].innerText.toLowerCase()
+let proceso = row.children[1].innerText.toLowerCase()
+let registro = row.children[2].innerText.toLowerCase()
+
+if(
+estado.includes(filter) ||
+proceso.includes(filter) ||
+registro.includes(filter)
+){
+row.style.display=""
+}
+else{
+row.style.display="none"
+}
+
+})
+
+})
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proyecto MLOps - Historias de Usuario Completas</title>
+<style>
+    body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #f8fafc;
+        margin: 0;
+        padding: 30px;
+        color: #1f2937;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: auto;
+    }
+
+    .epic {
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        color: white;
+        padding: 28px;
+        border-radius: 18px;
+        margin-bottom: 30px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    }
+
+    .epic h1 {
+        margin: 0 0 10px 0;
+        font-size: 30px;
+    }
+
+    .epic p {
+        margin: 0;
+        line-height: 1.7;
+        font-size: 16px;
+    }
+
+    .card {
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 28px;
+        margin-bottom: 28px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        border: 1px solid #e2e8f0;
+    }
+
+    .hu-header {
+        display: flex;
+        justify-content: space-between;
+    align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 16px;
+    }
+
+    .hu-title {
+        font-size: 26px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .hu-id {
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-weight: 700;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+
+    .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .meta-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 14px 16px;
+    }
+
+    .meta-box strong {
+        display: block;
+        font-size: 13px;
+        color: #475569;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+
+    .story-box {
+        background: #eff6ff;
+        border-left: 6px solid #2563eb;
+        padding: 18px 20px;
+        border-radius: 12px;
+        line-height: 1.8;
+        font-size: 16px;
+        margin-bottom: 24px;
+    }
+
+    .section {
+        margin-top: 22px;
+    }
+
+    .section h3 {
+        font-size: 18px;
+        color: #1e293b;
+        margin-bottom: 12px;
+        border-left: 5px solid #3b82f6;
+        padding-left: 10px;
+    }
+
+    .section p {
+        line-height: 1.7;
+        margin: 0;
+    }
+
+    ul {
+        margin: 0;
+        padding-left: 22px;
+    }
+
+    ul li {
+        margin-bottom: 10px;
+        line-height: 1.7;
+    }
+
+    .tag {
+        display: inline-block;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        margin-right: 8px;
+        margin-top: 6px;
+    }
+
+    .tag-priority {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .tag-business {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .footer {
+        margin-top: 28px;
+        background: #0f172a;
+        color: white;
+        padding: 26px;
+        border-radius: 16px;
+        text-align: center;
+        line-height: 1.8;
+    }
+
+    @media (max-width: 768px) {
+        body {
+            padding: 18px;
+        }
+        .hu-title {
+            font-size: 22px;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+
+    <div class="epic">
+        <h1>Épica: Proyecto MLOps</h1>
+        <p>
+            Iniciativa orientada a establecer las bases técnicas y operativas para la ejecución controlada,
+            reproducible y trazable de modelos analíticos, mediante Docker y un flujo formal de promoción
+            entre entornos DEV, DESA y PROD.
+        </p>
+    </div>
+
+    <!-- HU 1 -->
+    <div class="card">
+        <div class="hu-header">
+            <h2 class="hu-title">Instalacion de Docker en server de Validacion y Normalizacion de estructura de Modelos de Ciencias de Datos</h2>
+            <span class="hu-id">US-MLOPS-001</span>
+        </div>
+
+        <div class="meta-grid">
+            <div class="meta-box">
+                <strong>Épica</strong>
+                Proyecto MLOps
+            </div>
+            <div class="meta-box">
+                <strong>Tipo</strong>
+                Historia de Usuario
+            </div>
+            <div class="meta-box">
+                <strong>Prioridad</strong>
+                Alta
+            </div>
+            <div class="meta-box">
+                <strong>Valor de negocio</strong>
+                Alto
+            </div>
+            <div class="meta-box">
+                <strong>Responsable sugerido</strong>
+                Equipo Técnico / Infraestructura / Data Science
+            </div>
+            <div class="meta-box">
+                <strong>Estado sugerido</strong>
+                New / To Do
+            </div>
+        </div>
+
+        <div class="story-box">
+            <strong>Como</strong> equipo técnico,<br>
+            <strong>quiero</strong> disponer de Docker instalado y operativo en el servidor de validación, junto con una estructura estándar para contenerizar los modelos analíticos,<br>
+            <strong>para</strong> asegurar una ejecución reproducible, controlada y preparada para su promoción entre entornos.
+        </div>
+
+        <div class="section">
+            <h3>Descripción</h3>
+            <p>
+                Actualmente los modelos analíticos pueden depender de configuraciones locales, librerías no uniformes
+                y diferencias entre ambientes, lo que dificulta su reproducibilidad y su posterior paso a validación
+                y producción. Esta historia busca habilitar la base técnica inicial del proyecto MLOps, dejando Docker
+                instalado en el servidor objetivo y definiendo el empaquetado estándar de los modelos mediante contenedores.
+            </p>
+        </div>
+
+        <div class="section">
+            <h3>Objetivo</h3>
+            <p>
+                Contar con una plataforma técnica mínima que permita ejecutar modelos de forma consistente en un entorno
+                controlado, evitando diferencias entre desarrollo y validación.
+            </p>
+        </div>
+
+        <div class="section">
+            <h3>Alcance</h3>
+            <ul>
+                <li>Instalación y configuración de Docker en el servidor definido para DESA/validación.</li>
+                <li>Validación de ejecución de contenedores en dicho servidor.</li>
+                <li>Definición de estructura estándar mínima para entrega de modelos analíticos.</li>
+                <li>Empaquetado de un modelo base mediante Docker.</li>
+                <li>Documentación técnica del proceso de instalación, build y ejecución.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Fuera de alcance</h3>
+            <ul>
+                <li>Automatización completa del pipeline CI/CD.</li>
+                <li>Implementación de MLflow, DVC o monitoreo de modelos.</li>
+                <li>Despliegue productivo definitivo.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Criterios de aceptación</h3>
+            <ul>
+                <li>Docker queda instalado y configurado correctamente en el servidor definido para DESA/validación.</li>
+                <li>Se valida que el servidor puede construir y ejecutar contenedores sin errores.</li>
+                <li>Se define una estructura estándar mínima de entrega del modelo analítico, incluyendo al menos <code>modelo.py</code>, <code>requirements.txt</code> y <code>Dockerfile</code>.</li>
+                <li>El modelo puede empaquetarse y ejecutarse exitosamente mediante Docker en el servidor.</li>
+                <li>La ejecución del contenedor produce resultados consistentes ante las mismas entradas de prueba.</li>
+                <li>Las dependencias del modelo quedan formalmente declaradas y controladas.</li>
+                <li>Se documenta el proceso técnico de instalación, construcción y ejecución del contenedor.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Dependencias</h3>
+            <ul>
+                <li>Disponibilidad del servidor DESA o ambiente espejo.</li>
+                <li>Accesos y permisos de instalación en el servidor.</li>
+                <li>Definición del modelo piloto a contenerizar.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Supuestos</h3>
+            <ul>
+                <li>El servidor cuenta con sistema operativo compatible para instalación de Docker.</li>
+                <li>Se dispone del espacio, red y permisos necesarios para ejecutar contenedores.</li>
+                <li>El modelo piloto ya se encuentra funcional en entorno de desarrollo.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Riesgos</h3>
+            <ul>
+                <li>Restricciones de seguridad o infraestructura para instalar Docker.</li>
+                <li>Dependencias del modelo no declaradas correctamente.</li>
+                <li>Diferencias entre el modelo local y el empaquetado en contenedor.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Definition of Done (DoD)</h3>
+            <ul>
+                <li>Docker instalado y probado en servidor DESA.</li>
+                <li>Imagen construida exitosamente.</li>
+                <li>Modelo piloto ejecutado dentro de contenedor.</li>
+                <li>Resultados validados con entradas controladas.</li>
+                <li>Documentación técnica almacenada en repositorio o espacio definido.</li>
+                <li>HU validada por referente técnico y usuario responsable.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Tareas técnicas sugeridas</h3>
+            <ul>
+                <li>Solicitar accesos y permisos al servidor.</li>
+                <li>Instalar Docker y validar servicio operativo.</li>
+                <li>Definir plantilla estándar de proyecto analítico.</li>
+                <li>Generar <code>Dockerfile</code> base.</li>
+                <li>Construir imagen del modelo piloto.</li>
+                <li>Ejecutar pruebas en servidor.</li>
+                <li>Documentar procedimiento técnico.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <span class="tag tag-priority">Prioridad Alta</span>
+            <span class="tag tag-business">Valor de negocio Alto</span>
+        </div>
+    </div>
+
+    <!-- HU 2 -->
+    <div class="card">
+        <div class="hu-header">
+            <h2 class="hu-title">Formalización del flujo de Fases Tecnicas para Ciencias de Datos</h2>
+            <span class="hu-id">US-MLOPS-002</span>
+        </div>
+
+        <div class="meta-grid">
+            <div class="meta-box">
+                <strong>Épica</strong>
+                Proyecto MLOps
+            </div>
+            <div class="meta-box">
+                <strong>Tipo</strong>
+                Historia de Usuario
+            </div>
+            <div class="meta-box">
+                <strong>Prioridad</strong>
+                Alta
+            </div>
+            <div class="meta-box">
+                <strong>Valor de negocio</strong>
+                Alto
+            </div>
+            <div class="meta-box">
+                <strong>Responsable sugerido</strong>
+                Dueño del proceso / Equipo Técnico / Gobierno TI
+            </div>
+            <div class="meta-box">
+                <strong>Estado sugerido</strong>
+                New / To Do
+            </div>
+        </div>
+
+        <div class="story-box">
+            <strong>Como</strong> responsable del ciclo de vida del modelo,<br>
+            <strong>quiero</strong> formalizar el proceso de promoción DEV-DESA-PROD,<br>
+            <strong>para</strong> garantizar validación previa y trazabilidad antes de producción.
+        </div>
+
+        <div class="section">
+            <h3>Descripción</h3>
+            <p>
+                Para reducir riesgos operativos y asegurar control sobre los modelos analíticos, es necesario definir
+                un flujo formal de promoción entre ambientes. Esta historia establece las reglas mínimas de gobierno
+                para que todo modelo pase por desarrollo, validación técnica y posteriormente producción, con evidencia,
+                responsables y versiones identificables.
+            </p>
+        </div>
+
+        <div class="section">
+            <h3>Objetivo</h3>
+            <p>
+                Contar con un proceso claro, repetible y auditable de promoción de modelos entre entornos, disminuyendo
+                despliegues manuales o no controlados.
+            </p>
+        </div>
+
+        <div class="section">
+            <h3>Alcance</h3>
+            <ul>
+                <li>Definir el flujo oficial DEV → DESA → PROD.</li>
+                <li>Establecer validaciones previas obligatorias antes de producción.</li>
+                <li>Definir responsables, evidencias y puntos de control.</li>
+                <li>Documentar el proceso de promoción y versionado mínimo.</li>
+                <li>Dejar preparado el camino para futura automatización.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Fuera de alcance</h3>
+            <ul>
+                <li>Automatización completa del despliegue.</li>
+                <li>Monitoreo productivo avanzado.</li>
+                <li>Versionado formal con herramientas especializadas como MLflow.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Criterios de aceptación</h3>
+            <ul>
+                <li>Se documenta el flujo oficial de promoción de modelos entre DEV, DESA y PROD.</li>
+                <li>Todo modelo debe pasar por una validación técnica previa en DESA antes de su promoción.</li>
+                <li>Se establece formalmente que no habrá ejecuciones directas en producción sin validación previa.</li>
+                <li>La promoción a producción se realiza únicamente con una versión validada del contenedor.</li>
+                <li>Se define un mecanismo formal para registrar evidencia de validación, versión y responsable.</li>
+                <li>El proceso queda preparado para futura automatización mediante jobs o scheduler.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Dependencias</h3>
+            <ul>
+                <li>Existencia del entorno DESA operativo.</li>
+                <li>Modelo contenido y ejecutable en Docker.</li>
+                <li>Alineación con áreas de infraestructura, seguridad y producción.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Supuestos</h3>
+            <ul>
+                <li>El equipo acepta una política de promoción formal entre ambientes.</li>
+                <li>El ambiente DESA representa razonablemente el comportamiento técnico previo a PROD.</li>
+                <li>Se dispone de un repositorio o medio para registrar evidencias y documentación.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Riesgos</h3>
+            <ul>
+                <li>Falta de alineación entre áreas sobre responsabilidades de promoción.</li>
+                <li>Saltos de proceso por urgencias operativas.</li>
+                <li>Documentación incompleta de versiones o validaciones.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Definition of Done (DoD)</h3>
+            <ul>
+                <li>Flujo DEV → DESA → PROD definido y aprobado.</li>
+                <li>Responsables y puntos de control identificados.</li>
+                <li>Formato de evidencia mínima establecido.</li>
+                <li>Documento o guía operativa disponible para consulta.</li>
+                <li>Proceso socializado con los equipos involucrados.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Tareas técnicas sugeridas</h3>
+            <ul>
+                <li>Levantar proceso actual de desarrollo y despliegue.</li>
+                <li>Diseñar flujo objetivo de promoción.</li>
+                <li>Definir responsables por etapa.</li>
+                <li>Diseñar formato de evidencia de validación.</li>
+                <li>Documentar política de promoción y restricciones.</li>
+                <li>Socializar el proceso con áreas involucradas.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <span class="tag tag-priority">Prioridad Alta</span>
+            <span class="tag tag-business">Valor de negocio Alto</span>
+        </div>
+    </div>
+
+    <div class="footer">
+        <strong>Conclusión</strong><br><br>
+        La HU 1 habilita la base técnica del proyecto con Docker y la contenerización del modelo.
+        La HU 2 establece la base operativa y de gobierno para el paso ordenado entre DEV, DESA y PROD.
+        Juntas constituyen el arranque natural de la épica Proyecto MLOps.
+    </div>
+
+</div>
+</body>
+</html>

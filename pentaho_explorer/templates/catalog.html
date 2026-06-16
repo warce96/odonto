@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<title>Catálogo ETL</title>
+
+<link rel="stylesheet" href="/static/style.css">
+
+<style>
+
+.catalog-container{
+max-width:1200px;
+margin:auto;
+}
+
+.tech-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:18px;
+}
+
+.tip-box{
+background:#eef4ff;
+border-radius:10px;
+padding:14px;
+}
+
+/* BOTON PDF */
+
+.pdf-btn{
+background:#2f67f6;
+color:white;
+border:none;
+padding:10px 16px;
+border-radius:8px;
+font-size:14px;
+font-weight:600;
+cursor:pointer;
+transition:all .2s ease;
+margin-top:10px;
+}
+
+.pdf-btn:hover{
+background:#1f4fd4;
+transform:translateY(-2px);
+}
+
+/* SCORE */
+
+.score-box{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:16px;
+margin-bottom:24px;
+}
+
+.score{
+background:white;
+padding:18px;
+border-radius:12px;
+text-align:center;
+box-shadow:0 8px 24px rgba(16,24,40,0.08);
+}
+
+.score-title{
+font-size:12px;
+color:#667085;
+}
+
+.score-value{
+font-size:26px;
+font-weight:700;
+}
+
+/* FLOW */
+
+.flow-container{
+display:flex;
+flex-direction:column;
+gap:20px;
+margin-top:10px;
+}
+
+.flow-row{
+
+display:grid;
+grid-template-columns:1fr 260px 1fr;
+align-items:center;
+
+background:#f8fafc;
+border:1px solid #e4e7ec;
+border-radius:14px;
+padding:18px;
+
+transition:all .25s ease;
+}
+
+.flow-row:hover{
+transform:translateY(-3px);
+box-shadow:0 10px 26px rgba(0,0,0,0.08);
+}
+
+/* BOX */
+
+.flow-box{
+background:white;
+border-radius:10px;
+padding:14px;
+display:flex;
+align-items:center;
+gap:10px;
+font-weight:600;
+box-shadow:0 4px 12px rgba(16,24,40,0.06);
+}
+
+/* BADGES */
+
+.badge-source{
+background:#d9ecff;
+color:#155eef;
+padding:4px 8px;
+border-radius:6px;
+font-size:11px;
+font-weight:700;
+}
+
+.badge-target{
+background:#dff7df;
+color:#27814a;
+padding:4px 8px;
+border-radius:6px;
+font-size:11px;
+font-weight:700;
+}
+
+.schema{
+font-size:12px;
+color:#98a2b3;
+}
+
+/* FLOW LINE */
+
+.flow-middle{
+position:relative;
+height:40px;
+display:flex;
+align-items:center;
+}
+
+.flow-line{
+width:100%;
+height:4px;
+background:#e4e7ec;
+border-radius:4px;
+position:relative;
+}
+
+.flow-dot{
+position:absolute;
+top:50%;
+left:0;
+width:10px;
+height:10px;
+background:#2f67f6;
+border-radius:50%;
+transform:translateY(-50%);
+animation:dataMove 2s linear infinite;
+box-shadow:0 0 8px rgba(47,103,246,0.7);
+}
+
+.flow-arrow{
+position:absolute;
+right:-8px;
+top:50%;
+transform:translateY(-50%);
+font-size:18px;
+color:#2f67f6;
+}
+
+@keyframes dataMove{
+0%{left:0%;}
+100%{left:100%;}
+}
+
+/* SQL */
+
+.sql-title{
+background:#f8fafc;
+padding:10px;
+border-bottom:1px solid #eaecf0;
+font-weight:700;
+}
+
+.sql-block{
+border:1px solid #eaecf0;
+border-radius:10px;
+margin-bottom:14px;
+overflow:hidden;
+}
+
+/* PRINT */
+
+@media print{
+
+.pdf-btn{
+display:none;
+}
+
+.flow-dot{
+display:none;
+}
+
+.flow-row{
+page-break-inside:avoid;
+}
+
+.panel{
+page-break-inside:avoid;
+}
+
+body{
+background:white;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="topbar">
+<div class="brand">ETL Governance Portal</div>
+</div>
+
+<div class="viewer-container catalog-container">
+
+<div class="viewer-title">
+📘 {{ file }}
+<span class="badge neutral">{{ ext|upper }}</span>
+</div>
+
+<div class="viewer-subtitle">
+Documento técnico generado automáticamente desde el portal ETL
+</div>
+
+<button onclick="downloadPDF()" class="pdf-btn">
+📄 Descargar PDF
+</button>
+
+<br>
+
+<!-- SCORE -->
+
+<div class="score-box">
+
+<div class="score">
+<div class="score-title">Complejidad ETL</div>
+<div class="score-value">{{ summary.complexity or 'N/A' }}</div>
+</div>
+
+<div class="score">
+<div class="score-title">Steps</div>
+<div class="score-value">{{ summary.total_steps or 0 }}</div>
+</div>
+
+<div class="score">
+<div class="score-title">Tablas Origen</div>
+<div class="score-value">{{ sources|length }}</div>
+</div>
+
+<div class="score">
+<div class="score-title">Tablas Destino</div>
+<div class="score-value">{{ targets|length }}</div>
+</div>
+
+</div>
+
+<!-- METADATA -->
+
+<div class="tech-grid">
+
+<div class="panel">
+
+<div class="panel-title">
+Metadata técnica
+</div>
+
+<ul class="clean-list">
+
+<li><strong>Tipo objeto:</strong> {{ ext }}</li>
+
+<li><strong>Tipo proceso:</strong>
+{% if targets|length > 0 %}
+Transformación ETL
+{% else %}
+Script
+{% endif %}
+</li>
+
+<li><strong>Bloques SQL:</strong> {{ sql_blocks|length }}</li>
+
+<li><strong>Dependencias:</strong> {{ dependencies|length }}</li>
+
+</ul>
+
+</div>
+
+<div class="panel">
+
+<div class="panel-title">
+Impacto de datos
+</div>
+
+<ul class="clean-list">
+
+<li>Tablas fuente: {{ sources|length }}</li>
+<li>Tablas afectadas: {{ targets|length }}</li>
+<li>Transformaciones: {{ sql_blocks|length }}</li>
+<li>Objetos analizados: {{ summary.total_steps or 0 }}</li>
+
+</ul>
+
+</div>
+
+</div>
+
+<!-- FLOW -->
+
+<div class="panel">
+
+<div class="panel-title">
+Flujo de datos ETL
+</div>
+
+<div class="flow-container">
+
+{% if sources and targets %}
+
+{% for s in sources %}
+{% for t in targets %}
+
+{% set s_schema = s.split('.') %}
+{% set t_schema = t.split('.') %}
+
+<div class="flow-row">
+
+<div class="flow-box">
+
+<span class="badge-source">SOURCE</span>
+
+<span class="schema">
+{% if s_schema|length > 1 %}
+{{ s_schema[0] }}.
+{% endif %}
+</span>
+
+<span>
+{% if s_schema|length > 1 %}
+{{ s_schema[1] }}
+{% else %}
+{{ s }}
+{% endif %}
+</span>
+
+</div>
+
+<div class="flow-middle">
+
+<div class="flow-line">
+<div class="flow-dot"></div>
+</div>
+
+<div class="flow-arrow">➜</div>
+
+</div>
+
+<div class="flow-box">
+
+<span class="badge-target">TARGET</span>
+
+<span class="schema">
+{% if t_schema|length > 1 %}
+{{ t_schema[0] }}.
+{% endif %}
+</span>
+
+<span>
+{% if t_schema|length > 1 %}
+{{ t_schema[1] }}
+{% else %}
+{{ t }}
+{% endif %}
+</span>
+
+</div>
+
+</div>
+
+{% endfor %}
+{% endfor %}
+
+{% else %}
+
+<div class="muted">
+No se detectó flujo ETL
+</div>
+
+{% endif %}
+
+</div>
+
+</div>
+
+<!-- SQL -->
+
+<div class="panel">
+
+<div class="panel-title">
+SQL detectado
+</div>
+
+{% for item in sql_blocks %}
+
+<div class="sql-block">
+
+<div class="sql-title">
+{{ item.step }}
+</div>
+
+<pre>{{ item.sql }}</pre>
+
+</div>
+
+{% else %}
+
+<div class="muted">
+No se detectó SQL
+</div>
+
+{% endfor %}
+
+</div>
+
+<!-- BUENAS PRACTICAS -->
+
+<div class="panel">
+
+<div class="panel-title">
+Buenas prácticas ETL
+</div>
+
+<div class="tip-box">
+
+<ul>
+
+<li>Evitar SELECT * en producción.</li>
+<li>Aplicar filtros antes de joins grandes.</li>
+<li>Evitar funciones dentro de JOIN.</li>
+<li>Separar transformaciones pesadas.</li>
+<li>Registrar logs de ejecución.</li>
+<li>Controlar manejo de errores.</li>
+<li>Validar volúmenes de datos procesados.</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+function downloadPDF(){
+window.print();
+}
+
+</script>
+
+</body>
+</html>
